@@ -9,8 +9,8 @@ const path = require('path');
 // Import sqlite3 with verbose debugging messages enabled
 const sqlite3 = require('sqlite3').verbose();
 
-// Construct absolute path to the local database file in project root
-const dbPath = path.resolve(__dirname, '../database.sqlite');
+// Construct absolute path to the database file in root directory (two levels up from src/models)
+const dbPath = path.join(__dirname, '../../database.sqlite');
 
 // Open or automatically create the SQLite database file
 const db = new sqlite3.Database(dbPath, (err) => {

@@ -1,7 +1,10 @@
 // ====================================================
 // SERVER ENTRY POINT: SCALABLE MODULAR MVC ARCHITECTURE
-// THEME 1: MODULAR COMPONENT ORGANIZATION
+// THEME 1: MODULAR COMPONENT ORGANIZATION (SRC ENCAPSULATION)
 // ====================================================
+
+// Import path module to resolve filesystem directories reliably
+const path = require('path');
 
 // Import the core Express framework
 const express = require('express');
@@ -41,8 +44,8 @@ app.use(session({
   }
 }));
 
-// Middleware: Serve static frontend files from the 'public' directory
-app.use(express.static('public'));
+// Middleware: Serve static frontend files from '../public' directory relative to src/
+app.use(express.static(path.join(__dirname, '../public')));
 
 // Mount modular authentication routes under '/api' prefix
 app.use('/api', authRoutes);
