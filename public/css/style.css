@@ -1,0 +1,128 @@
+/* ==================================================== */
+/* GLOBAL STYLES FOR BACKGROUND AND TYPOGRAPHY          */
+/* ==================================================== */
+body {
+  font-family: Arial, sans-serif;
+  background: #f4f7f6;
+  color: #333;
+  margin: 0;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Main card container */
+.card {
+  background: #ffffff;
+  padding: 20px 30px;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+  width: 100%;
+  max-width: 500px;
+  margin-bottom: 20px;
+}
+
+/* Heading style */
+h1, h2 {
+  text-align: center;
+  color: #2c3e50;
+  margin-top: 0;
+}
+
+/* Subheading style */
+p.subtitle {
+  text-align: center;
+  font-size: 0.9em;
+  color: #7f8c8d;
+  margin-top: -10px;
+  margin-bottom: 20px;
+}
+
+/* Label and input layout */
+.form-group {
+  margin-bottom: 15px;
+}
+
+label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+
+input {
+  width: 100%;
+  padding: 10px;
+  box-sizing: border-box;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 1em;
+}
+
+/* Button styles */
+button {
+  width: 100%;
+  padding: 12px;
+  background-color: #f1c40f;
+  color: #2c3e50;
+  font-weight: bold;
+  border: none;
+  border-radius: 6px;
+  font-size: 1em;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  margin-top: 5px;
+}
+
+button:hover {
+  background-color: #d4ac0d;
+}
+
+button:disabled {
+  background-color: #bdc3c7;
+  cursor: not-allowed;
+}
+
+/* Timer badge style */
+.timer-badge {
+  font-size: 1.2em;
+  font-weight: bold;
+  text-align: center;
+  padding: 8px;
+  background: #eef2f7;
+  border-radius: 6px;
+  margin: 15px 0;
+  color: #e74c3c;
+}
+
+/* Puzzle image display */
+#puzzle-img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 15px auto;
+  border-radius: 8px;
+  border: 2px solid #ecf0f1;
+}
+
+/* Status message box */
+#message-box {
+  text-align: center;
+  font-weight: bold;
+  margin-top: 15px;
+  min-height: 24px;
+}
+
+/* Helper utility classes */
+.hidden {
+  display: none;
+}
+
+.badge-user {
+  display: inline-block;
+  background: #27ae60;
+  color: white;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 0.85em;
+}
