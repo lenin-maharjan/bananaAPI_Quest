@@ -1,2 +1,5 @@
 # Ignore dependencies installed by npm
 node_modules/
+
+# Ignore local SQLite database file generated at runtime
+*.sqlite

@@ -12,6 +12,9 @@ const router = express.Router();
 // Import the authController methods containing the business logic
 const authController = require('../controllers/authController');
 
+// Map POST /api/register to authController.register
+router.post('/register', authController.register);
+
 // Map POST /api/login to authController.login
 router.post('/login', authController.login);
 

@@ -1,7 +1,7 @@
 // ====================================================
 // BANANA QUEST FRONTEND APPLICATION LOGIC
 // THEME 3: EVENT-DRIVEN PROGRAMMING & CUSTOM EVENTS
-// THEME 4: VIRTUAL IDENTITY INTEGRATION
+// THEME 4: VIRTUAL IDENTITY INTEGRATION (REGISTER & LOGIN)
 // THEME 2: INTEROPERABILITY CLIENT CONSUMPTION
 // ====================================================
 
@@ -11,6 +11,8 @@ const gameSection = document.getElementById('game-section');
 const usernameInput = document.getElementById('username');
 const passwordInput = document.getElementById('password');
 const loginBtn = document.getElementById('login-btn');
+const registerBtn = document.getElementById('register-btn');
+const authMessage = document.getElementById('auth-message');
 const logoutBtn = document.getElementById('logout-btn');
 const currentUserSpan = document.getElementById('current-user');
 const timerDisplay = document.getElementById('timer-display');
@@ -80,14 +82,58 @@ window.addEventListener('timer-expired', () => {
 });
 
 // ----------------------------------------------------
-// THEME 4: VIRTUAL IDENTITY (CLIENT-SIDE AUTHENTICATION)
+// THEME 4: VIRTUAL IDENTITY (REGISTRATION & LOGIN)
 // ----------------------------------------------------
 
-// EVENT LISTENER 3: Handle user login click event
+// EVENT LISTENER 3: Handle user registration click event
+registerBtn.addEventListener('click', async () => {
+  // Read username and password values from form inputs
+  const username = usernameInput.value.trim();
+  const password = passwordInput.value;
+
+  // Validate that input fields are not empty
+  if (!username || !password) {
+    // Show validation error message in red
+    authMessage.style.color = '#e74c3c';
+    authMessage.textContent = 'Please enter both a username and password to register.';
+    return;
+  }
+
+  // Send asynchronous POST request to /api/register endpoint
+  const response = await fetch('/api/register', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username, password })
+  });
+
+  // Parse JSON response returned from registration endpoint
+  const data = await response.json();
+
+  // Check if registration was successful
+  if (data.success) {
+    // Display success confirmation in green
+    authMessage.style.color = '#27ae60';
+    authMessage.textContent = data.message;
+  } else {
+    // Display error message in red
+    authMessage.style.color = '#e74c3c';
+    authMessage.textContent = data.message || 'Registration failed.';
+  }
+});
+
+// EVENT LISTENER 4: Handle user login click event
 loginBtn.addEventListener('click', async () => {
   // Gather entered username and password
-  const username = usernameInput.value;
+  const username = usernameInput.value.trim();
   const password = passwordInput.value;
+
+  // Validate that input fields are not empty
+  if (!username || !password) {
+    // Show validation warning in red
+    authMessage.style.color = '#e74c3c';
+    authMessage.textContent = 'Please enter both a username and password.';
+    return;
+  }
 
   // Send POST request with credentials to establish session cookie
   const response = await fetch('/api/login', {
@@ -106,14 +152,16 @@ loginBtn.addEventListener('click', async () => {
     gameSection.classList.remove('hidden');
     // Display authenticated virtual identity username
     currentUserSpan.textContent = data.username;
+    authMessage.textContent = '';
     messageBox.textContent = '';
   } else {
-    // Show error alert on invalid login credentials
-    alert(data.message || 'Login failed');
+    // Show authentication failure message in red
+    authMessage.style.color = '#e74c3c';
+    authMessage.textContent = data.message || 'Invalid username or password.';
   }
 });
 
-// EVENT LISTENER 4: Handle user logout click event
+// EVENT LISTENER 5: Handle user logout click event
 logoutBtn.addEventListener('click', async () => {
   // Inform server to destroy virtual identity session and clear cookie
   await fetch('/api/logout', { method: 'POST' });
@@ -125,6 +173,7 @@ logoutBtn.addEventListener('click', async () => {
   // Reset inputs and UI states
   puzzleImg.classList.add('hidden');
   guessContainer.classList.add('hidden');
+  authMessage.textContent = '';
   messageBox.textContent = '';
 });
 
@@ -132,7 +181,7 @@ logoutBtn.addEventListener('click', async () => {
 // THEME 2: INTEROPERABILITY (FETCHING EXTERNAL PUZZLE)
 // ----------------------------------------------------
 
-// EVENT LISTENER 5: Handle click to load a new puzzle
+// EVENT LISTENER 6: Handle click to load a new puzzle
 fetchPuzzleBtn.addEventListener('click', async () => {
   // Show loading feedback
   messageBox.style.color = '#2980b9';
@@ -155,7 +204,7 @@ fetchPuzzleBtn.addEventListener('click', async () => {
   startTimer();
 });
 
-// EVENT LISTENER 6: Handle guess submission click event
+// EVENT LISTENER 7: Handle guess submission click event
 submitGuessBtn.addEventListener('click', async () => {
   // Read player's guess from input box
   const guess = guessInput.value;

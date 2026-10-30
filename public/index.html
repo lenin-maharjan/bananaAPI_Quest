@@ -13,20 +13,26 @@
 <body>
 
   <!-- ==================================================== -->
-  <!-- THEME 4: VIRTUAL IDENTITY UI (LOGIN CARD)            -->
+  <!-- THEME 4: VIRTUAL IDENTITY UI (LOGIN & REGISTER CARD) -->
   <!-- ==================================================== -->
   <div id="login-section" class="card">
-    <h2>Virtual Identity Login</h2>
-    <p class="subtitle">Enter credentials to establish a secure session</p>
+    <h2>Virtual Identity Access</h2>
+    <p class="subtitle">Register or log in to establish an encrypted session</p>
     <div class="form-group">
       <label for="username">Username:</label>
-      <input type="text" id="username" value="student" placeholder="Enter username">
+      <input type="text" id="username" placeholder="Enter username">
     </div>
     <div class="form-group">
       <label for="password">Password:</label>
-      <input type="password" id="password" value="banana123" placeholder="Enter password">
+      <input type="password" id="password" placeholder="Enter password">
     </div>
-    <button id="login-btn">Log In</button>
+    <!-- Actions for Logging in and Registering -->
+    <div style="display: flex; gap: 10px;">
+      <button id="login-btn">Log In</button>
+      <button id="register-btn" style="background-color: #3498db; color: white;">Register</button>
+    </div>
+    <!-- Dedicated authentication feedback message display -->
+    <div id="auth-message" style="margin-top: 15px; text-align: center; font-weight: bold; min-height: 20px;"></div>
   </div>
 
   <!-- ==================================================== -->
