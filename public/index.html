@@ -1,12 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <!-- Character encoding standard -->
   <meta charset="UTF-8">
   <!-- Responsive layout meta tag -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Retro Arcade Page Title -->
-  <title>🍌 BANANA QUEST // 90s ARCADE CABINET EDITION</title>
+  <title> BANANA QUEST // 90s ARCADE CABINET EDITION</title>
 
   <!-- Import Google Fonts: 'Press Start 2P' (8-bit arcade headers) & 'VT323' (MS-DOS terminal text) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -16,6 +17,7 @@
   <!-- Link to external 90s Retro Arcade Cabinet stylesheet -->
   <link rel="stylesheet" href="css/style.css">
 </head>
+
 <body>
 
   <!-- ==================================================== -->
@@ -36,7 +38,7 @@
         <span class="marquee-val" style="color: var(--arcade-green);">FREE PLAY</span>
       </div>
     </div>
-    <div class="cabinet-title">★ BANANA QUEST ARCADE 90s ★</div>
+    <div class="cabinet-title">★ BANANA QUEST ARCADE ★</div>
   </header>
 
   <!-- Two-Column Responsive Arcade Layout -->
@@ -94,7 +96,8 @@
               <span>HIGH SCORE</span>
             </div>
             <div id="leaderboard-list">
-              <div style="text-align: center; color: #64748b; font-size: 0.65rem; padding: 10px;">LOADING SCORES...</div>
+              <div style="text-align: center; color: #64748b; font-size: 0.65rem; padding: 10px;">LOADING SCORES...
+              </div>
             </div>
           </div>
         </div>
@@ -110,9 +113,11 @@
 
         <!-- THEME 3: HUD HEADER (SCORE, TIMER & LIVES SYSTEM) -->
         <div class="hud-grid">
-          <div id="score-display" class="timer-badge" style="flex: 1; border-color: var(--arcade-yellow); color: var(--arcade-yellow);">SCORE: 0000</div>
+          <div id="score-display" class="timer-badge"
+            style="flex: 1; border-color: var(--arcade-yellow); color: var(--arcade-yellow);">SCORE: 0000</div>
           <div id="timer-display" class="timer-badge" style="flex: 1;">TIME: 45s</div>
-          <div id="lives-display" class="timer-badge" style="flex: 1; border-color: var(--arcade-pink); color: var(--arcade-pink);">LIVES: ❤️❤️❤️</div>
+          <div id="lives-display" class="timer-badge"
+            style="flex: 1; border-color: var(--arcade-pink); color: var(--arcade-pink);">LIVES: ❤️❤️❤️</div>
         </div>
 
         <!-- THEME 2: 3RD-PARTY PUZZLE IMAGE (MARC CONRAD REST API) -->
@@ -142,7 +147,9 @@
             <button type="button" class="keypad-btn" data-val="0">0</button>
           </div>
 
-          <button id="submit-guess-btn" style="margin-top: 10px; background: linear-gradient(to bottom, #ffe600, #d4ac0d); color: #000;">[ FIRE ANSWER ]</button>
+          <button id="submit-guess-btn"
+            style="margin-top: 10px; background: linear-gradient(to bottom, #ffe600, #d4ac0d); color: #000;">[ FIRE
+            ANSWER ]</button>
         </div>
 
         <!-- Gameplay result feedback box -->
@@ -189,13 +196,16 @@
   <!-- ==================================================== -->
   <div id="game-over-modal" class="modal hidden">
     <div class="modal-content">
-      <h2 class="blink-text" style="color: var(--arcade-red); font-size: 1.25rem; text-shadow: 0 0 15px var(--arcade-red); margin-bottom: 14px;">
+      <h2 class="blink-text"
+        style="color: var(--arcade-red); font-size: 1.25rem; text-shadow: 0 0 15px var(--arcade-red); margin-bottom: 14px;">
         💀 GAME OVER 💀
       </h2>
       <p style="font-size: 0.8rem; color: var(--arcade-cyan); letter-spacing: 2px; margin-bottom: 8px;">CONTINUE?</p>
-      <p id="modal-score-text" style="font-size: 0.95rem; color: var(--arcade-yellow); margin-bottom: 24px;">FINAL SCORE: 0000</p>
+      <p id="modal-score-text" style="font-size: 0.95rem; color: var(--arcade-yellow); margin-bottom: 24px;">FINAL
+        SCORE: 0000</p>
       <div style="display: flex; flex-direction: column; gap: 12px;">
-        <button id="modal-retry-btn" style="background: linear-gradient(to bottom, #39ff14, #27ae60); color: #000; padding: 16px;">
+        <button id="modal-retry-btn"
+          style="background: linear-gradient(to bottom, #39ff14, #27ae60); color: #000; padding: 16px;">
           [ 🪙 INSERT COIN / TRY AGAIN ]
         </button>
         <button id="modal-menu-btn" style="background: linear-gradient(to bottom, #00f0ff, #0088aa); color: #000;">
@@ -208,4 +218,5 @@
   <!-- Modular frontend logic connecting CustomEvents, Interoperability, Synth, and Keypad -->
   <script src="js/app.js"></script>
 </body>
+
 </html>
