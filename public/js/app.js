@@ -25,6 +25,7 @@ const dashLogoutBtn = document.getElementById('dash-logout-btn');
 // Cache gameplay elements
 const currentUserSpan = document.getElementById('current-user');
 const timerDisplay = document.getElementById('timer-display');
+const livesDisplay = document.getElementById('lives-display');
 const puzzleImg = document.getElementById('puzzle-img');
 const fetchPuzzleBtn = document.getElementById('fetch-puzzle-btn');
 const guessContainer = document.getElementById('guess-container');
@@ -42,6 +43,9 @@ const clearStreamBtn = document.getElementById('clear-stream-btn');
 let timerInterval = null;
 let timeLeft = 45;
 
+// Global arcade player lives state (3 hearts)
+let lives = 3;
+
 // ====================================================
 // FINITE STATE MACHINE: VIEW-SWITCHING CONTROLLER
 // ====================================================
@@ -54,6 +58,22 @@ function switchView(targetView) {
   dashboardSection.classList.toggle('hidden', targetView !== 'dashboard');
   // Show or hide gameplay puzzle card
   gameSection.classList.toggle('hidden', targetView !== 'game');
+}
+
+// ====================================================
+// LIVES SYSTEM: HUD STATE RENDERER
+// ====================================================
+
+// Helper function to render active hearts in the arcade HUD
+function updateLivesDisplay() {
+  // Construct hearts string based on remaining lives
+  if (lives > 0) {
+    // Repeat active heart emoji and empty black heart for lost lives
+    livesDisplay.textContent = `LIVES: ${'❤️'.repeat(lives)}${'🖤'.repeat(3 - lives)}`;
+  } else {
+    // Show zero lives indicator
+    livesDisplay.textContent = 'LIVES: 💀💀💀';
+  }
 }
 
 // ====================================================
@@ -147,15 +167,22 @@ window.addEventListener('timer-tick', (event) => {
 // SUBSCRIBER 2: Listen for custom 'timer-expired' event
 window.addEventListener('timer-expired', (event) => {
   // Display game over status on timer badge
-  timerDisplay.textContent = 'TIME EXPIRED! GAME OVER';
+  timerDisplay.textContent = 'TIME EXPIRED!';
+  // Deplete remaining lives to zero
+  lives = 0;
+  updateLivesDisplay();
   // Disable user input controls
   submitGuessBtn.disabled = true;
   guessInput.disabled = true;
   // Display game over feedback
   messageBox.style.color = 'var(--neon-red)';
-  messageBox.textContent = 'Out of time! Click [NEXT PUZZLE] to try again.';
+  messageBox.textContent = 'GAME OVER! TIME EXPIRED. CLICK [MAIN MENU] TO RETRY.';
   // Log timeout event to MS-DOS console
   logToEventStream('timer-expired', event.detail, 'timer-expired');
+  // Dispatch game-over event
+  window.dispatchEvent(new CustomEvent('game-over', {
+    detail: { reason: 'TIME_EXPIRED', timestamp: Date.now() }
+  }));
 });
 
 // ====================================================
@@ -193,7 +220,7 @@ window.addEventListener('auth-logout', (event) => {
 });
 
 // ====================================================
-// THEME 2: INTEROPERABILITY CUSTOM EVENT SUBSCRIBERS
+// THEME 2 & 3: GAMEPLAY LOOP & ARCADE SUBSCRIBERS
 // ====================================================
 
 // Helper function to request puzzle from backend proxy
@@ -223,9 +250,14 @@ window.addEventListener('puzzle-loaded', (event) => {
   // Reveal puzzle image and answer form
   puzzleImg.classList.remove('hidden');
   guessContainer.classList.remove('hidden');
+  // Re-enable answer button and input
+  submitGuessBtn.disabled = false;
+  guessInput.disabled = false;
   // Reset guess input and clear message box
   guessInput.value = '';
   messageBox.textContent = '';
+  // Automatically focus the input for fast keyboard play
+  guessInput.focus();
   // Log puzzle event to MS-DOS console
   logToEventStream('puzzle-loaded', { imageUrl: event.detail.imageUrl });
   // Start the 45-second event-driven countdown timer
@@ -237,28 +269,80 @@ window.addEventListener('guess-evaluated', (event) => {
   // Log guess evaluation event to MS-DOS console
   logToEventStream('guess-evaluated', event.detail);
 
-  // Check if guess was correct
+  // BRANCH A: Correct Answer - Trigger seamless auto-progression
   if (event.detail.correct) {
-    // Stop timer upon correct solution
+    // Stop countdown timer upon correct solution
     clearInterval(timerInterval);
-    messageBox.style.color = 'var(--neon-green)';
-    messageBox.textContent = `★ ${event.detail.message} ★`;
+    // Disable submit button during transition delay
     submitGuessBtn.disabled = true;
+    guessInput.disabled = true;
+    // Display victorious feedback message
+    messageBox.style.color = 'var(--neon-green)';
+    messageBox.textContent = `★ ${event.detail.message} NEXT PUZZLE IN 1.5S... ★`;
+
+    // Seamless auto-progression loop: load next puzzle after 1.5 seconds
+    setTimeout(() => {
+      loadPuzzle();
+    }, 1500);
+
   } else {
-    // Display incorrect guess feedback
-    messageBox.style.color = 'var(--neon-red)';
-    messageBox.textContent = `✖ ${event.detail.message}`;
+    // BRANCH B: Incorrect Answer - Deduct 1 life
+    lives--;
+    updateLivesDisplay();
+
+    // Check if player still has remaining lives
+    if (lives > 0) {
+      // Display incorrect feedback with remaining attempts
+      messageBox.style.color = 'var(--neon-red)';
+      messageBox.textContent = `✖ ${event.detail.message} TRY AGAIN! (${lives} LIVES LEFT)`;
+      // Clear input and refocus so user can retry instantly
+      guessInput.value = '';
+      guessInput.focus();
+
+    } else {
+      // BRANCH C: Game Over - Lives depleted to zero
+      clearInterval(timerInterval);
+      submitGuessBtn.disabled = true;
+      guessInput.disabled = true;
+      messageBox.style.color = 'var(--neon-red)';
+      messageBox.textContent = '💀 GAME OVER! ZERO LIVES REMAINING. CLICK [MAIN MENU] TO RETRY.';
+
+      // PUBLISHER: Dispatch custom 'game-over' event to MS-DOS terminal
+      window.dispatchEvent(new CustomEvent('game-over', {
+        detail: { reason: 'OUT_OF_LIVES', timestamp: Date.now() }
+      }));
+    }
   }
 });
 
 // SUBSCRIBER 8: Listen for custom 'game-start' event
 window.addEventListener('game-start', (event) => {
+  // Reset lives state to 3 at start of new arcade session
+  lives = 3;
+  updateLivesDisplay();
+  // Log session initiation to MS-DOS console
   logToEventStream('game-start', event.detail, 'game-start');
 });
 
+// SUBSCRIBER 9: Listen for custom 'game-over' event
+window.addEventListener('game-over', (event) => {
+  // Log game over audit to MS-DOS console
+  logToEventStream('game-over', event.detail, 'timer-expired');
+});
+
 // ====================================================
-// DOM EVENT HANDLERS (DISPATCHING CUSTOM EVENTS)
+// DOM EVENT HANDLERS (KEYBOARD & BUTTON CLICKS)
 // ====================================================
+
+// KEYBOARD SUPPORT: Submit answer instantly when pressing 'Enter' inside guess input
+guessInput.addEventListener('keypress', (event) => {
+  // Check if Enter key was pressed and submit button is enabled
+  if (event.key === 'Enter' && !submitGuessBtn.disabled) {
+    // Prevent default form behavior and simulate submit button click
+    event.preventDefault();
+    submitGuessBtn.click();
+  }
+});
 
 // DOM CLICK 1: User Registration Button
 registerBtn.addEventListener('click', async () => {
@@ -327,7 +411,7 @@ startGameBtn.addEventListener('click', () => {
   // Transition view to gameplay card
   switchView('game');
 
-  // PUBLISHER: Dispatch custom 'game-start' event
+  // PUBLISHER: Dispatch custom 'game-start' event to initialize lives and session
   window.dispatchEvent(new CustomEvent('game-start', {
     detail: { mode: 'ARCADE', player: dashUserSpan.textContent, timestamp: Date.now() }
   }));

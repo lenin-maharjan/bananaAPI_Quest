@@ -96,8 +96,11 @@
         <h2>=== PUZZLE CHALLENGE ===</h2>
         <p class="subtitle">PLAYER: <span id="current-user" class="badge-user"></span></p>
 
-        <!-- THEME 3: EVENT-DRIVEN COUNTDOWN TIMER BADGE -->
-        <div id="timer-display" class="timer-badge">TIME: 45s</div>
+        <!-- THEME 3: HUD HEADER (EVENT-DRIVEN COUNTDOWN TIMER & LIVES SYSTEM) -->
+        <div style="display: flex; gap: 12px; margin-bottom: 18px;">
+          <div id="timer-display" class="timer-badge" style="flex: 1; margin-bottom: 0;">TIME: 45s</div>
+          <div id="lives-display" class="timer-badge" style="flex: 1; margin-bottom: 0; border-color: var(--neon-pink); color: var(--neon-pink);">LIVES: ❤️❤️❤️</div>
+        </div>
 
         <!-- THEME 2: 3RD-PARTY PUZZLE IMAGE (MARC CONRAD REST API) -->
         <img id="puzzle-img" src="" alt="Arcade Banana Math Puzzle" class="hidden">
