@@ -1,0 +1,13 @@
+{
+  "name": "banana-quest-simplified",
+  "version": "1.0.0",
+  "description": "Banana Quest educational game demonstrating 4 core enterprise software themes",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "express-session": "^1.18.0"
+  }
+}
