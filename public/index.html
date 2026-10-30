@@ -1,71 +1,124 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <!-- Set character encoding for the document -->
+  <!-- Character encoding standard -->
   <meta charset="UTF-8">
-  <!-- Ensure mobile responsive layout rendering -->
+  <!-- Responsive layout meta tag for cross-device scaling -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <!-- Title displayed on the browser tab -->
-  <title>Banana Quest - Minimal Enterprise Edition</title>
-  <!-- Link to external modular stylesheet -->
+  <!-- Application Title -->
+  <title>Banana Quest Enterprise - Distributed System</title>
+  <!-- Link to Dark Theme modular stylesheet with CSS variables -->
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
-  <!-- ==================================================== -->
-  <!-- THEME 4: VIRTUAL IDENTITY UI (LOGIN & REGISTER CARD) -->
-  <!-- ==================================================== -->
-  <div id="login-section" class="card">
-    <h2>Virtual Identity Access</h2>
-    <p class="subtitle">Register or log in to establish an encrypted session</p>
-    <div class="form-group">
-      <label for="username">Username:</label>
-      <input type="text" id="username" placeholder="Enter username">
-    </div>
-    <div class="form-group">
-      <label for="password">Password:</label>
-      <input type="password" id="password" placeholder="Enter password">
-    </div>
-    <!-- Actions for Logging in and Registering -->
-    <div style="display: flex; gap: 10px;">
-      <button id="login-btn">Log In</button>
-      <button id="register-btn" style="background-color: #3498db; color: white;">Register</button>
-    </div>
-    <!-- Dedicated authentication feedback message display -->
-    <div id="auth-message" style="margin-top: 15px; text-align: center; font-weight: bold; min-height: 20px;"></div>
-  </div>
+  <!-- Top application branding header -->
+  <header>
+    <h1>🍌 Banana Quest Enterprise</h1>
+    <p>Distributed Educational Architecture &middot; Event-Driven Core &middot; Virtual Identity</p>
+  </header>
 
-  <!-- ==================================================== -->
-  <!-- GAMEPLAY CARD (THEMES 2 & 3: INTEROPERABILITY & EVENTS) -->
-  <!-- ==================================================== -->
-  <div id="game-section" class="card hidden">
-    <h2>Banana Quest</h2>
-    <p class="subtitle">Authenticated as: <span id="current-user" class="badge-user"></span></p>
+  <!-- Two-Column Responsive Dashboard Layout -->
+  <div class="dashboard-layout">
 
-    <!-- THEME 3: EVENT-DRIVEN PROGRAMMING (TIMER DISPLAY) -->
-    <div id="timer-display" class="timer-badge">Time Left: 45s</div>
+    <!-- ==================================================== -->
+    <!-- COLUMN 1: INTERACTIVE USER APPLICATION PANELS        -->
+    <!-- ==================================================== -->
+    <main class="main-content">
 
-    <!-- THEME 2: INTEROPERABILITY (PUZZLE FETCHED FROM API) -->
-    <img id="puzzle-img" src="" alt="Banana Puzzle Image" class="hidden">
+      <!-- THEME 4: VIRTUAL IDENTITY (LOGIN & REGISTRATION CARD) -->
+      <section id="login-section" class="card">
+        <h2>Virtual Identity Access</h2>
+        <p class="subtitle">Secure authentication using SQLite & bcrypt hashing</p>
 
-    <button id="fetch-puzzle-btn">Load New Puzzle</button>
+        <!-- Username Input Field -->
+        <div class="form-group">
+          <label for="username">Username:</label>
+          <input type="text" id="username" placeholder="e.g. enterprise_student" autocomplete="username">
+        </div>
 
-    <div id="guess-container" class="hidden" style="margin-top: 15px;">
-      <div class="form-group">
-        <label for="guess-input">Enter Answer (0-9):</label>
-        <input type="number" id="guess-input" min="0" max="9" placeholder="Enter digit">
+        <!-- Password Input Field -->
+        <div class="form-group">
+          <label for="password">Password:</label>
+          <input type="password" id="password" placeholder="e.g. secure_banana_pass" autocomplete="current-password">
+        </div>
+
+        <!-- Authentication Buttons (Log In & Register) -->
+        <div style="display: flex; gap: 12px; margin-top: 8px;">
+          <button id="login-btn">Log In</button>
+          <button id="register-btn">Register</button>
+        </div>
+
+        <!-- Feedback message area for authentication results -->
+        <div id="auth-message"></div>
+      </section>
+
+      <!-- THEME 2 & 3: GAMEPLAY CARD (INTEROPERABILITY & EVENTS) -->
+      <section id="game-section" class="card hidden">
+        <h2>Banana Quest Gameplay</h2>
+        <p class="subtitle">Active Identity: <span id="current-user" class="badge-user"></span></p>
+
+        <!-- THEME 3: EVENT-DRIVEN COUNTDOWN TIMER BADGE -->
+        <div id="timer-display" class="timer-badge">Time Left: 45s</div>
+
+        <!-- THEME 2: 3RD-PARTY PUZZLE IMAGE FETCHED VIA REST API -->
+        <img id="puzzle-img" src="" alt="Banana Puzzle Question" class="hidden">
+
+        <!-- Button to trigger Interoperability fetch request -->
+        <button id="fetch-puzzle-btn">Load New Puzzle</button>
+
+        <!-- Answer input container -->
+        <div id="guess-container" class="hidden" style="margin-top: 16px;">
+          <div class="form-group">
+            <label for="guess-input">Enter Solution Digit (0-9):</label>
+            <input type="number" id="guess-input" min="0" max="9" placeholder="Enter single digit answer">
+          </div>
+          <button id="submit-guess-btn">Submit Answer</button>
+        </div>
+
+        <!-- Gameplay result and verification feedback box -->
+        <div id="message-box"></div>
+
+        <!-- Logout button to revoke virtual identity session -->
+        <button id="logout-btn" style="background-color: var(--accent-error); color: white; margin-top: 24px;">Log Out</button>
+      </section>
+
+    </main>
+
+    <!-- ==================================================== -->
+    <!-- COLUMN 2: LIVE PUB/SUB EVENT STREAM CONSOLE          -->
+    <!-- THEME 2: EVENT-DRIVEN ARCHITECTURE VISUALIZATION     -->
+    <!-- ==================================================== -->
+    <aside id="event-stream-console">
+
+      <!-- Terminal window top header bar -->
+      <div class="terminal-header">
+        <div class="terminal-dots">
+          <span class="dot dot-red"></span>
+          <span class="dot dot-yellow"></span>
+          <span class="dot dot-green"></span>
+        </div>
+        <div class="terminal-title">📡 Live Event Stream (Pub/Sub Bus)</div>
+        <button id="clear-stream-btn" class="clear-btn">Clear</button>
       </div>
-      <button id="submit-guess-btn">Submit Answer</button>
-    </div>
 
-    <!-- Feedback display -->
-    <div id="message-box"></div>
+      <!-- Real-time scrolling container where published events appear -->
+      <div id="event-log-container" class="terminal-body">
+        <!-- Initial boot message -->
+        <div class="event-entry">
+          <div class="event-meta">
+            <span>SYSTEM BOOT</span>
+            <span>READY</span>
+          </div>
+          <div class="event-payload">Listening to window CustomEvent bus...</div>
+        </div>
+      </div>
 
-    <!-- Logout button to clear virtual identity -->
-    <button id="logout-btn" style="background:#e74c3c; color:white; margin-top:20px;">Log Out</button>
+    </aside>
+
   </div>
 
-  <!-- Link to external modular JavaScript file containing event-driven game logic -->
+  <!-- Modular frontend logic connecting CustomEvents, Interoperability, and Auth -->
   <script src="js/app.js"></script>
 </body>
 </html>
