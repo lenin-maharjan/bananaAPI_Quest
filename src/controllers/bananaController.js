@@ -106,10 +106,10 @@ exports.saveScore = (req, res) => {
 exports.getLeaderboard = (req, res) => {
   // Parameterized aggregate SQL query retrieving top 5 highest scores per player
   const sql = `
-    SELECT username, MAX(score) AS best_score 
+    SELECT username, MAX(score) AS high_score 
     FROM scores 
     GROUP BY username 
-    ORDER BY best_score DESC 
+    ORDER BY high_score DESC 
     LIMIT 5
   `;
 

@@ -6,22 +6,37 @@
   <!-- Responsive layout meta tag -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Retro Arcade Page Title -->
-  <title>🍌 BANANA QUEST // RETRO ARCADE EDITION</title>
+  <title>🍌 BANANA QUEST // 90s ARCADE CABINET EDITION</title>
 
-  <!-- Import Google Fonts: 'Press Start 2P' (8-bit headers) & 'VT323' (MS-DOS terminal text) -->
+  <!-- Import Google Fonts: 'Press Start 2P' (8-bit arcade headers) & 'VT323' (MS-DOS terminal text) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
 
-  <!-- Link to external Retro Arcade stylesheet -->
+  <!-- Link to external 90s Retro Arcade Cabinet stylesheet -->
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
-  <!-- Top Retro Arcade Branding Header -->
-  <header>
-    <h1>👾 BANANA QUEST ARCADE 🍌</h1>
-    <p>[ 1 PLAYER MODE &middot; DISTRIBUTED SYSTEM &middot; RETRO EDITION ]</p>
+  <!-- ==================================================== -->
+  <!-- 90s ARCADE TOP CABINET MARQUEE                       -->
+  <!-- ==================================================== -->
+  <header class="marquee-header">
+    <div class="marquee-stats">
+      <div class="marquee-item">
+        <span class="marquee-label">1UP</span>
+        <span id="marquee-1up" class="marquee-val">0000</span>
+      </div>
+      <div class="marquee-item">
+        <span class="marquee-label">HIGH SCORE</span>
+        <span id="marquee-high" class="marquee-val">0500</span>
+      </div>
+      <div class="marquee-item">
+        <span class="marquee-label blink-text">INSERT COIN</span>
+        <span class="marquee-val" style="color: var(--arcade-green);">FREE PLAY</span>
+      </div>
+    </div>
+    <div class="cabinet-title">★ BANANA QUEST ARCADE 90s ★</div>
   </header>
 
   <!-- Two-Column Responsive Arcade Layout -->
@@ -39,13 +54,13 @@
 
         <!-- Username Input Field -->
         <div class="form-group">
-          <label for="username">&gt; USERNAME:</label>
+          <label for="username">&gt; PLAYER TAG / USERNAME:</label>
           <input type="text" id="username" placeholder="PLAYER_1" autocomplete="username">
         </div>
 
         <!-- Password Input Field -->
         <div class="form-group">
-          <label for="password">&gt; PASSWORD:</label>
+          <label for="password">&gt; SECRET KEY / PASSWORD:</label>
           <input type="password" id="password" placeholder="******" autocomplete="current-password">
         </div>
 
@@ -59,39 +74,28 @@
         <div id="auth-message"></div>
       </section>
 
-      <!-- SECTION 2: NEW! MAIN MENU ARCADE DASHBOARD -->
+      <!-- SECTION 2: PLAYER HQ & HALL OF FAME LEADERBOARD -->
       <section id="dashboard-section" class="card hidden">
         <h2>=== PLAYER HQ DASHBOARD ===</h2>
         <p class="subtitle">AUTHENTICATED AGENT: <span id="dash-user" class="badge-user"></span></p>
 
-        <!-- Retro Status Badges Grid -->
-        <div class="arcade-stats-grid">
-          <div class="stat-box">
-            <div class="stat-label">DIFFICULTY</div>
-            <div class="stat-val">HARD</div>
-          </div>
-          <div class="stat-box">
-            <div class="stat-label">CREDITS</div>
-            <div class="stat-val">99</div>
-          </div>
-          <div class="stat-box">
-            <div class="stat-label">TIME LIMIT</div>
-            <div class="stat-val">45 SEC</div>
-          </div>
-          <div class="stat-box">
-            <div class="stat-label">API STATUS</div>
-            <div class="stat-val" style="color: var(--neon-cyan);">ONLINE</div>
-          </div>
-        </div>
-
-        <!-- Start Game Trigger -->
+        <!-- Start Arcade Game Trigger -->
         <button id="start-game-btn">🕹️ START ARCADE MODE</button>
 
-        <!-- Persistent SQLite Leaderboard Container -->
+        <!-- 90s Hall of Fame Top 5 High Scores Table -->
         <div style="margin-top: 24px;">
-          <h3 style="font-size: 0.7rem; color: var(--neon-cyan); margin-bottom: 10px; text-transform: uppercase;">🏆 TOP 5 PLAYERS (SQLITE DB):</h3>
-          <div id="leaderboard-list" class="leaderboard-container">
-            <div style="text-align: center; color: var(--text-dim); font-size: 0.65rem; padding: 10px;">LOADING SCORES...</div>
+          <h3 style="font-size: 0.72rem; color: var(--arcade-yellow); margin-bottom: 8px; text-transform: uppercase;">
+            🏆 HALL OF FAME // TOP 5 (SQLITE DB)
+          </h3>
+          <div class="leaderboard-cabinet">
+            <div class="leaderboard-header">
+              <span>RANK</span>
+              <span>PLAYER</span>
+              <span>HIGH SCORE</span>
+            </div>
+            <div id="leaderboard-list">
+              <div style="text-align: center; color: #64748b; font-size: 0.65rem; padding: 10px;">LOADING SCORES...</div>
+            </div>
           </div>
         </div>
 
@@ -99,31 +103,46 @@
         <button id="dash-logout-btn" class="danger-btn" style="margin-top: 20px;">⚡ LOG OUT</button>
       </section>
 
-      <!-- SECTION 3: ARCADE GAMEPLAY & PUZZLE CHALLENGE -->
+      <!-- SECTION 3: ARCADE GAMEPLAY, KEYPAD & PUZZLE CHALLENGE -->
       <section id="game-section" class="card hidden">
         <h2>=== PUZZLE CHALLENGE ===</h2>
         <p class="subtitle">PLAYER: <span id="current-user" class="badge-user"></span></p>
 
         <!-- THEME 3: HUD HEADER (SCORE, TIMER & LIVES SYSTEM) -->
-        <div style="display: flex; gap: 8px; margin-bottom: 18px;">
-          <div id="score-display" class="timer-badge" style="flex: 1; margin-bottom: 0; border-color: var(--neon-yellow); color: var(--neon-yellow);">SCORE: 0</div>
-          <div id="timer-display" class="timer-badge" style="flex: 1; margin-bottom: 0;">TIME: 45s</div>
-          <div id="lives-display" class="timer-badge" style="flex: 1; margin-bottom: 0; border-color: var(--neon-pink); color: var(--neon-pink);">LIVES: ❤️❤️❤️</div>
+        <div class="hud-grid">
+          <div id="score-display" class="timer-badge" style="flex: 1; border-color: var(--arcade-yellow); color: var(--arcade-yellow);">SCORE: 0000</div>
+          <div id="timer-display" class="timer-badge" style="flex: 1;">TIME: 45s</div>
+          <div id="lives-display" class="timer-badge" style="flex: 1; border-color: var(--arcade-pink); color: var(--arcade-pink);">LIVES: ❤️❤️❤️</div>
         </div>
 
         <!-- THEME 2: 3RD-PARTY PUZZLE IMAGE (MARC CONRAD REST API) -->
         <img id="puzzle-img" src="" alt="Arcade Banana Math Puzzle" class="hidden">
 
-        <!-- Button to fetch next puzzle -->
+        <!-- Button to fetch next puzzle manually if needed -->
         <button id="fetch-puzzle-btn">[ NEXT PUZZLE ]</button>
 
-        <!-- Guess input container -->
+        <!-- TACTILE 0-9 ARCADE BUTTON KEYPAD CONTAINER -->
         <div id="guess-container" class="hidden" style="margin-top: 18px;">
-          <div class="form-group">
-            <label for="guess-input">&gt; ENTER DIGIT (0-9):</label>
-            <input type="number" id="guess-input" min="0" max="9" placeholder="?">
+          <div class="form-group" style="margin-bottom: 8px;">
+            <label for="guess-input">&gt; ENTER SOLUTION (CLICK KEYPAD OR TYPE 0-9):</label>
+            <input type="number" id="guess-input" min="0" max="9" placeholder="PRESS 0-9 KEY">
           </div>
-          <button id="submit-guess-btn">[ FIRE ANSWER ]</button>
+
+          <!-- Chunky 0-9 Arcade Push Buttons -->
+          <div class="arcade-keypad">
+            <button type="button" class="keypad-btn" data-val="1">1</button>
+            <button type="button" class="keypad-btn" data-val="2">2</button>
+            <button type="button" class="keypad-btn" data-val="3">3</button>
+            <button type="button" class="keypad-btn" data-val="4">4</button>
+            <button type="button" class="keypad-btn" data-val="5">5</button>
+            <button type="button" class="keypad-btn" data-val="6">6</button>
+            <button type="button" class="keypad-btn" data-val="7">7</button>
+            <button type="button" class="keypad-btn" data-val="8">8</button>
+            <button type="button" class="keypad-btn" data-val="9">9</button>
+            <button type="button" class="keypad-btn" data-val="0">0</button>
+          </div>
+
+          <button id="submit-guess-btn" style="margin-top: 10px; background: linear-gradient(to bottom, #ffe600, #d4ac0d); color: #000;">[ FIRE ANSWER ]</button>
         </div>
 
         <!-- Gameplay result feedback box -->
@@ -131,8 +150,8 @@
 
         <!-- Navigation Buttons -->
         <div style="display: flex; gap: 10px; margin-top: 16px;">
-          <button id="back-to-dash-btn" style="flex: 1;">🔙 MAIN MENU</button>
-          <button id="logout-btn" class="danger-btn" style="flex: 1; margin-top: 14px;">⚡ LOG OUT</button>
+          <button id="back-to-dash-btn" style="flex: 1; background: #334155; color: #fff;">🔙 MAIN MENU</button>
+          <button id="logout-btn" class="danger-btn" style="flex: 1;">⚡ LOG OUT</button>
         </div>
       </section>
 
@@ -166,20 +185,27 @@
   </div>
 
   <!-- ==================================================== -->
-  <!-- GAME OVER RETRO POPUP MODAL                          -->
+  <!-- 90s GAME OVER / CONTINUE? POPUP MODAL                -->
   <!-- ==================================================== -->
   <div id="game-over-modal" class="modal hidden">
     <div class="modal-content">
-      <h2 style="color: var(--neon-red); font-size: 1.1rem; text-shadow: 0 0 10px var(--neon-red); margin-bottom: 16px;">💀 GAME OVER 💀</h2>
-      <p id="modal-score-text" style="font-size: 0.85rem; color: var(--neon-yellow); margin-bottom: 24px;">FINAL SCORE: 0</p>
-      <div style="display: flex; gap: 12px;">
-        <button id="modal-retry-btn" style="background-color: var(--neon-green); color: #000;">[ TRY AGAIN ]</button>
-        <button id="modal-menu-btn" style="background-color: var(--neon-cyan); color: #000;">[ MAIN MENU ]</button>
+      <h2 class="blink-text" style="color: var(--arcade-red); font-size: 1.25rem; text-shadow: 0 0 15px var(--arcade-red); margin-bottom: 14px;">
+        💀 GAME OVER 💀
+      </h2>
+      <p style="font-size: 0.8rem; color: var(--arcade-cyan); letter-spacing: 2px; margin-bottom: 8px;">CONTINUE?</p>
+      <p id="modal-score-text" style="font-size: 0.95rem; color: var(--arcade-yellow); margin-bottom: 24px;">FINAL SCORE: 0000</p>
+      <div style="display: flex; flex-direction: column; gap: 12px;">
+        <button id="modal-retry-btn" style="background: linear-gradient(to bottom, #39ff14, #27ae60); color: #000; padding: 16px;">
+          [ 🪙 INSERT COIN / TRY AGAIN ]
+        </button>
+        <button id="modal-menu-btn" style="background: linear-gradient(to bottom, #00f0ff, #0088aa); color: #000;">
+          [ 🚪 EXIT TO LOBBY ]
+        </button>
       </div>
     </div>
   </div>
 
-  <!-- Modular frontend logic connecting CustomEvents, Interoperability, and State Machine -->
+  <!-- Modular frontend logic connecting CustomEvents, Interoperability, Synth, and Keypad -->
   <script src="js/app.js"></script>
 </body>
 </html>
