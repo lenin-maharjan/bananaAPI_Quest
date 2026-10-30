@@ -1,8 +1,11 @@
 // ====================================================
-// CONTROLLER: BANANA GAME & FAULT-TOLERANT INTEROPERABILITY
+// CONTROLLER: BANANA GAME, SCORES & LEADERBOARD
 // THEME 2: INTEROPERABILITY (EXTERNAL REST API CONSUMPTION)
-// THEME 2: FAULT TOLERANCE & GRACEFUL DEGRADATION
+// THEME 4: VIRTUAL IDENTITY & PERSISTENT LEADERBOARD
 // ====================================================
+
+// Import SQLite database instance for leaderboard persistence
+const db = require('../models/db');
 
 // Hardcoded fallback puzzle cache to ensure High Availability when remote API is down
 const FALLBACK_PUZZLE = {
@@ -64,4 +67,61 @@ exports.checkAnswer = (req, res) => {
 
   // Respond that answer is incorrect and reveal answer
   return res.json({ correct: false, message: `Incorrect! The correct answer was ${solution}` });
+};
+
+// Controller method to save a game session score tied to the authenticated user
+exports.saveScore = (req, res) => {
+  // Extract score from request payload
+  const { score } = req.body;
+
+  // Retrieve authenticated username directly from server-side session cookie (Virtual Identity)
+  const username = req.session.username;
+
+  // Parse numeric score safely
+  const numericScore = parseInt(score, 10) || 0;
+
+  // Parameterized SQL INSERT statement to prevent SQL injection
+  const sql = 'INSERT INTO scores (username, score) VALUES (?, ?)';
+
+  // Insert score record into SQLite database
+  db.run(sql, [username, numericScore], function (err) {
+    // Check for database errors
+    if (err) {
+      console.error('Error saving score to database:', err.message);
+      return res.status(500).json({ success: false, message: 'Database error saving score' });
+    }
+
+    // Return success response with newly created record ID
+    return res.json({
+      success: true,
+      message: 'Score successfully recorded on leaderboard!',
+      scoreId: this.lastID,
+      username,
+      score: numericScore
+    });
+  });
+};
+
+// Controller method to fetch top 5 high scores aggregated by player
+exports.getLeaderboard = (req, res) => {
+  // Parameterized aggregate SQL query retrieving top 5 highest scores per player
+  const sql = `
+    SELECT username, MAX(score) AS best_score 
+    FROM scores 
+    GROUP BY username 
+    ORDER BY best_score DESC 
+    LIMIT 5
+  `;
+
+  // Query SQLite database for top leaderboard records
+  db.all(sql, [], (err, rows) => {
+    // Check for query errors
+    if (err) {
+      console.error('Error fetching leaderboard:', err.message);
+      return res.status(500).json({ success: false, message: 'Database error fetching leaderboard' });
+    }
+
+    // Return array of top players and their best scores
+    return res.json({ success: true, leaderboard: rows });
+  });
 };

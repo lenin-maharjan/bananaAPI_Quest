@@ -1,7 +1,7 @@
 // ====================================================
 // BANANA QUEST: RETRO ARCADE EVENT-DRIVEN CLIENT
 // THEME 3: EVENT-DRIVEN PROGRAMMING (PUB/SUB & STATE MACHINE)
-// THEME 4: VIRTUAL IDENTITY (SQLITE & BCRYPT AUTH)
+// THEME 4: VIRTUAL IDENTITY (SQLITE AUTH & PERSISTENT SCORES)
 // THEME 2: INTEROPERABILITY (MARC CONRAD BANANA REST API)
 // ====================================================
 
@@ -21,9 +21,11 @@ const authMessage = document.getElementById('auth-message');
 const dashUserSpan = document.getElementById('dash-user');
 const startGameBtn = document.getElementById('start-game-btn');
 const dashLogoutBtn = document.getElementById('dash-logout-btn');
+const leaderboardList = document.getElementById('leaderboard-list');
 
-// Cache gameplay elements
+// Cache gameplay HUD elements
 const currentUserSpan = document.getElementById('current-user');
+const scoreDisplay = document.getElementById('score-display');
 const timerDisplay = document.getElementById('timer-display');
 const livesDisplay = document.getElementById('lives-display');
 const puzzleImg = document.getElementById('puzzle-img');
@@ -35,6 +37,12 @@ const messageBox = document.getElementById('message-box');
 const backToDashBtn = document.getElementById('back-to-dash-btn');
 const logoutBtn = document.getElementById('logout-btn');
 
+// Cache Game Over Modal elements
+const gameOverModal = document.getElementById('game-over-modal');
+const modalScoreText = document.getElementById('modal-score-text');
+const modalRetryBtn = document.getElementById('modal-retry-btn');
+const modalMenuBtn = document.getElementById('modal-menu-btn');
+
 // Cache MS-DOS event stream console elements
 const eventLogContainer = document.getElementById('event-log-container');
 const clearStreamBtn = document.getElementById('clear-stream-btn');
@@ -43,8 +51,9 @@ const clearStreamBtn = document.getElementById('clear-stream-btn');
 let timerInterval = null;
 let timeLeft = 45;
 
-// Global arcade player lives state (3 hearts)
+// Global arcade player state
 let lives = 3;
+let currentScore = 0;
 
 // ====================================================
 // FINITE STATE MACHINE: VIEW-SWITCHING CONTROLLER
@@ -58,22 +67,65 @@ function switchView(targetView) {
   dashboardSection.classList.toggle('hidden', targetView !== 'dashboard');
   // Show or hide gameplay puzzle card
   gameSection.classList.toggle('hidden', targetView !== 'game');
+
+  // If navigating into dashboard, fetch latest high scores from database
+  if (targetView === 'dashboard') {
+    fetchLeaderboard();
+  }
 }
 
 // ====================================================
-// LIVES SYSTEM: HUD STATE RENDERER
+// PERSISTENT LEADERBOARD: SQLITE FETCH & RENDER
+// ====================================================
+
+// Function to query backend for top 5 scores from SQLite database
+async function fetchLeaderboard() {
+  try {
+    // Send authenticated GET request to retrieve top aggregated scores
+    const res = await fetch('/api/leaderboard');
+    const data = await res.json();
+
+    // Check if query succeeded
+    if (data.success) {
+      // Check if leaderboard contains score records
+      if (data.leaderboard && data.leaderboard.length > 0) {
+        // Construct HTML markup for each high score row
+        leaderboardList.innerHTML = data.leaderboard.map((entry, index) => `
+          <div class="leaderboard-row">
+            <span class="leaderboard-rank">#${index + 1}</span>
+            <span class="leaderboard-name">${entry.username}</span>
+            <span class="leaderboard-score">${entry.best_score} PTS</span>
+          </div>
+        `).join('');
+      } else {
+        // Fallback display when no scores exist yet
+        leaderboardList.innerHTML = '<div style="text-align: center; color: var(--text-dim); font-size: 0.65rem; padding: 10px;">NO HIGH SCORES RECORDED YET</div>';
+      }
+
+      // Log successful leaderboard retrieval to MS-DOS terminal
+      logToEventStream('leaderboard-fetched', { totalEntries: data.leaderboard ? data.leaderboard.length : 0 });
+    }
+  } catch (error) {
+    console.error('Failed to fetch leaderboard:', error);
+  }
+}
+
+// ====================================================
+// LIVES & SCORE: HUD STATE RENDERERS
 // ====================================================
 
 // Helper function to render active hearts in the arcade HUD
 function updateLivesDisplay() {
-  // Construct hearts string based on remaining lives
   if (lives > 0) {
-    // Repeat active heart emoji and empty black heart for lost lives
     livesDisplay.textContent = `LIVES: ${'❤️'.repeat(lives)}${'🖤'.repeat(3 - lives)}`;
   } else {
-    // Show zero lives indicator
     livesDisplay.textContent = 'LIVES: 💀💀💀';
   }
+}
+
+// Helper function to update score display
+function updateScoreDisplay() {
+  scoreDisplay.textContent = `SCORE: ${currentScore}`;
 }
 
 // ====================================================
@@ -174,14 +226,11 @@ window.addEventListener('timer-expired', (event) => {
   // Disable user input controls
   submitGuessBtn.disabled = true;
   guessInput.disabled = true;
-  // Display game over feedback
-  messageBox.style.color = 'var(--neon-red)';
-  messageBox.textContent = 'GAME OVER! TIME EXPIRED. CLICK [MAIN MENU] TO RETRY.';
   // Log timeout event to MS-DOS console
   logToEventStream('timer-expired', event.detail, 'timer-expired');
-  // Dispatch game-over event
+  // Dispatch game-over event with final score metadata
   window.dispatchEvent(new CustomEvent('game-over', {
-    detail: { reason: 'TIME_EXPIRED', timestamp: Date.now() }
+    detail: { reason: 'TIME_EXPIRED', finalScore: currentScore, timestamp: Date.now() }
   }));
 });
 
@@ -269,16 +318,19 @@ window.addEventListener('guess-evaluated', (event) => {
   // Log guess evaluation event to MS-DOS console
   logToEventStream('guess-evaluated', event.detail);
 
-  // BRANCH A: Correct Answer - Trigger seamless auto-progression
+  // BRANCH A: Correct Answer - Increment score & auto-progression
   if (event.detail.correct) {
     // Stop countdown timer upon correct solution
     clearInterval(timerInterval);
+    // Award 100 points per puzzle solved
+    currentScore += 100;
+    updateScoreDisplay();
     // Disable submit button during transition delay
     submitGuessBtn.disabled = true;
     guessInput.disabled = true;
     // Display victorious feedback message
     messageBox.style.color = 'var(--neon-green)';
-    messageBox.textContent = `★ ${event.detail.message} NEXT PUZZLE IN 1.5S... ★`;
+    messageBox.textContent = `★ ${event.detail.message} +100 PTS! NEXT PUZZLE IN 1.5S... ★`;
 
     // Seamless auto-progression loop: load next puzzle after 1.5 seconds
     setTimeout(() => {
@@ -305,11 +357,11 @@ window.addEventListener('guess-evaluated', (event) => {
       submitGuessBtn.disabled = true;
       guessInput.disabled = true;
       messageBox.style.color = 'var(--neon-red)';
-      messageBox.textContent = '💀 GAME OVER! ZERO LIVES REMAINING. CLICK [MAIN MENU] TO RETRY.';
+      messageBox.textContent = '💀 GAME OVER! ZERO LIVES REMAINING.';
 
-      // PUBLISHER: Dispatch custom 'game-over' event to MS-DOS terminal
+      // PUBLISHER: Dispatch custom 'game-over' event to trigger score persistence and modal
       window.dispatchEvent(new CustomEvent('game-over', {
-        detail: { reason: 'OUT_OF_LIVES', timestamp: Date.now() }
+        detail: { reason: 'OUT_OF_LIVES', finalScore: currentScore, timestamp: Date.now() }
       }));
     }
   }
@@ -320,14 +372,64 @@ window.addEventListener('game-start', (event) => {
   // Reset lives state to 3 at start of new arcade session
   lives = 3;
   updateLivesDisplay();
+  // Reset score state to 0 at start of new session
+  currentScore = 0;
+  updateScoreDisplay();
   // Log session initiation to MS-DOS console
   logToEventStream('game-start', event.detail, 'game-start');
 });
 
-// SUBSCRIBER 9: Listen for custom 'game-over' event
-window.addEventListener('game-over', (event) => {
+// SUBSCRIBER 9: Listen for custom 'game-over' event (Persists Score & Opens Modal)
+window.addEventListener('game-over', async (event) => {
   // Log game over audit to MS-DOS console
   logToEventStream('game-over', event.detail, 'timer-expired');
+
+  // Asynchronously record final score in SQLite database via POST /api/score
+  try {
+    const res = await fetch('/api/score', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ score: currentScore })
+    });
+    const data = await res.json();
+    if (data.success) {
+      logToEventStream('score-saved', { score: currentScore, dbRecord: data.scoreId });
+    }
+  } catch (err) {
+    console.error('Failed to persist score:', err);
+  }
+
+  // Update Game Over modal with player's final score
+  modalScoreText.textContent = `FINAL SCORE: ${currentScore} PTS`;
+
+  // Display modal popup by removing hidden class
+  gameOverModal.classList.remove('hidden');
+});
+
+// ====================================================
+// MODAL BUTTON CONTROLLERS (RETRY & MAIN MENU)
+// ====================================================
+
+// Modal Retry Button: Instantly restart arcade mode
+modalRetryBtn.addEventListener('click', () => {
+  // Dismiss modal
+  gameOverModal.classList.add('hidden');
+  // Dispatch game-start event to reset lives and score
+  window.dispatchEvent(new CustomEvent('game-start', {
+    detail: { mode: 'ARCADE_RETRY', timestamp: Date.now() }
+  }));
+  // Fetch fresh puzzle immediately
+  loadPuzzle();
+});
+
+// Modal Menu Button: Return to main menu dashboard
+modalMenuBtn.addEventListener('click', () => {
+  // Dismiss modal
+  gameOverModal.classList.add('hidden');
+  // Switch view to dashboard
+  switchView('dashboard');
+  // Log navigation event
+  logToEventStream('nav-dashboard', { action: 'RETURN_FROM_MODAL' });
 });
 
 // ====================================================
@@ -411,7 +513,7 @@ startGameBtn.addEventListener('click', () => {
   // Transition view to gameplay card
   switchView('game');
 
-  // PUBLISHER: Dispatch custom 'game-start' event to initialize lives and session
+  // PUBLISHER: Dispatch custom 'game-start' event to initialize lives, score, and session
   window.dispatchEvent(new CustomEvent('game-start', {
     detail: { mode: 'ARCADE', player: dashUserSpan.textContent, timestamp: Date.now() }
   }));

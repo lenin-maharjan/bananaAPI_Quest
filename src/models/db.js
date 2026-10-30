@@ -1,6 +1,7 @@
 // ====================================================
 // DATABASE MODEL: PERSISTENT SQLITE STORAGE
 // THEME 4: VIRTUAL IDENTITY (CREDENTIAL PERSISTENCE)
+// THEME 1: DATA PERSISTENCE & SCORES SCHEMA
 // ====================================================
 
 // Import path module to resolve cross-platform absolute filesystem paths
@@ -27,7 +28,7 @@ const db = new sqlite3.Database(dbPath, (err) => {
 // Serialize operations to ensure table initialization finishes before queries
 db.serialize(() => {
   // Define SQL DDL statement to create the users table if it does not exist
-  const createTableSql = `
+  const createUsersTableSql = `
     CREATE TABLE IF NOT EXISTS users (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       username TEXT UNIQUE NOT NULL,
@@ -35,8 +36,8 @@ db.serialize(() => {
     )
   `;
 
-  // Execute the SQL schema creation command
-  db.run(createTableSql, (err) => {
+  // Execute the SQL schema creation command for users
+  db.run(createUsersTableSql, (err) => {
     // Check if error occurred during table initialization
     if (err) {
       // Print table creation failure error to console
@@ -44,6 +45,28 @@ db.serialize(() => {
     } else {
       // Print confirmation that users table is ready
       console.log('Database schema verified: "users" table is ready');
+    }
+  });
+
+  // Define SQL DDL statement to create the arcade scores leaderboard table
+  const createScoresTableSql = `
+    CREATE TABLE IF NOT EXISTS scores (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      username TEXT NOT NULL,
+      score INTEGER NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `;
+
+  // Execute the SQL schema creation command for scores
+  db.run(createScoresTableSql, (err) => {
+    // Check if error occurred during scores table creation
+    if (err) {
+      // Print error to console
+      console.error('Error creating scores table:', err.message);
+    } else {
+      // Print confirmation that scores table is ready
+      console.log('Database schema verified: "scores" table is ready');
     }
   });
 });

@@ -1,7 +1,7 @@
 // ====================================================
 // ROUTES: BANANA GAMEPLAY & INTEROPERABILITY
 // THEME 2: INTEROPERABILITY ROUTING
-// THEME 4: ACCESS CONTROL VIA SECURITY MIDDLEWARE
+// THEME 4: ACCESS CONTROL VIA SECURITY MIDDLEWARE & PERSISTENCE
 // ====================================================
 
 // Import Express framework to access the Router module
@@ -21,6 +21,12 @@ router.get('/puzzle', requireAuth, bananaController.getPuzzle);
 
 // Map POST /api/check-answer protected by requireAuth middleware
 router.post('/check-answer', requireAuth, bananaController.checkAnswer);
+
+// Map POST /api/score to save score to SQLite database (protected)
+router.post('/score', requireAuth, bananaController.saveScore);
+
+// Map GET /api/leaderboard to fetch top players from SQLite (protected)
+router.get('/leaderboard', requireAuth, bananaController.getLeaderboard);
 
 // Export router to be mounted in the main Express application server
 module.exports = router;
