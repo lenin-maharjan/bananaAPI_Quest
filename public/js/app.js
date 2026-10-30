@@ -1,19 +1,28 @@
 // ====================================================
-// BANANA QUEST: CLIENT-SIDE EVENT-DRIVEN ARCHITECTURE
-// THEME 3: EVENT-DRIVEN PROGRAMMING (PUB/SUB & CUSTOM EVENTS)
+// BANANA QUEST: RETRO ARCADE EVENT-DRIVEN CLIENT
+// THEME 3: EVENT-DRIVEN PROGRAMMING (PUB/SUB & STATE MACHINE)
 // THEME 4: VIRTUAL IDENTITY (SQLITE & BCRYPT AUTH)
 // THEME 2: INTEROPERABILITY (MARC CONRAD BANANA REST API)
 // ====================================================
 
-// Cache DOM element references for high performance UI manipulation
+// Cache DOM element references for all 3 view sections
 const loginSection = document.getElementById('login-section');
+const dashboardSection = document.getElementById('dashboard-section');
 const gameSection = document.getElementById('game-section');
+
+// Cache authentication inputs and buttons
 const usernameInput = document.getElementById('username');
 const passwordInput = document.getElementById('password');
 const loginBtn = document.getElementById('login-btn');
 const registerBtn = document.getElementById('register-btn');
 const authMessage = document.getElementById('auth-message');
-const logoutBtn = document.getElementById('logout-btn');
+
+// Cache dashboard elements
+const dashUserSpan = document.getElementById('dash-user');
+const startGameBtn = document.getElementById('start-game-btn');
+const dashLogoutBtn = document.getElementById('dash-logout-btn');
+
+// Cache gameplay elements
 const currentUserSpan = document.getElementById('current-user');
 const timerDisplay = document.getElementById('timer-display');
 const puzzleImg = document.getElementById('puzzle-img');
@@ -22,114 +31,130 @@ const guessContainer = document.getElementById('guess-container');
 const guessInput = document.getElementById('guess-input');
 const submitGuessBtn = document.getElementById('submit-guess-btn');
 const messageBox = document.getElementById('message-box');
+const backToDashBtn = document.getElementById('back-to-dash-btn');
+const logoutBtn = document.getElementById('logout-btn');
+
+// Cache MS-DOS event stream console elements
 const eventLogContainer = document.getElementById('event-log-container');
 const clearStreamBtn = document.getElementById('clear-stream-btn');
 
-// Timer state tracking variables
+// Global timer tracking variables
 let timerInterval = null;
 let timeLeft = 45;
 
 // ====================================================
-// THEME 3: PUB/SUB EVENT STREAM LOGGER (OBSERVER PATTERN)
+// FINITE STATE MACHINE: VIEW-SWITCHING CONTROLLER
 // ====================================================
 
-// Helper function to render dispatched events visually in the terminal console
+// Helper function to transition between the 3 distinct application views
+function switchView(targetView) {
+  // Show or hide login card depending on active state
+  loginSection.classList.toggle('hidden', targetView !== 'login');
+  // Show or hide arcade main menu dashboard card
+  dashboardSection.classList.toggle('hidden', targetView !== 'dashboard');
+  // Show or hide gameplay puzzle card
+  gameSection.classList.toggle('hidden', targetView !== 'game');
+}
+
+// ====================================================
+// THEME 3: MS-DOS EVENT STREAM LOGGER (OBSERVER PATTERN)
+// ====================================================
+
+// Helper function to log dispatched CustomEvents to the MS-DOS terminal
 function logToEventStream(eventName, details, customClass = '') {
-  // Capture precise millisecond timestamp for real-time audit trail
+  // Capture precise timestamp in HH:MM:SS.mmm format
   const timestamp = new Date().toISOString().substring(11, 23);
 
-  // Create new DOM card element for this logged event
+  // Create new DOM container for log entry
   const entry = document.createElement('div');
   entry.className = 'event-entry';
 
-  // Construct header displaying event name and timestamp
+  // Construct header with event name and timestamp
   const meta = document.createElement('div');
   meta.className = 'event-meta';
   meta.innerHTML = `
-    <span class="event-name ${customClass}">${eventName}</span>
+    <span class="event-name ${customClass}">&gt; [${eventName}]</span>
     <span>${timestamp}</span>
   `;
 
-  // Format payload details into formatted JSON string for inspection
+  // Format payload as JSON text
   const payload = document.createElement('div');
   payload.className = 'event-payload';
   payload.textContent = JSON.stringify(details);
 
-  // Append metadata and payload into event entry container
+  // Append meta and payload into entry container
   entry.appendChild(meta);
   entry.appendChild(payload);
 
-  // Append entry to terminal console stream
+  // Append entry to MS-DOS terminal stream
   eventLogContainer.appendChild(entry);
 
-  // Auto-scroll terminal to bottom to show most recent event
+  // Auto-scroll terminal to bottom
   eventLogContainer.scrollTop = eventLogContainer.scrollHeight;
 }
 
-// Click event listener to clear terminal event log stream
+// Clear terminal button listener
 clearStreamBtn.addEventListener('click', () => {
-  // Clear all log items from container
   eventLogContainer.innerHTML = '';
-  // Append fresh reset confirmation
-  logToEventStream('STREAM_CLEARED', { message: 'Event bus terminal reset' });
+  logToEventStream('CLS', { message: 'MS-DOS event bus buffer cleared' });
 });
 
 // ====================================================
 // THEME 3: EVENT-DRIVEN COUNTDOWN TIMER (CUSTOM EVENTS)
 // ====================================================
 
-// Function to initiate the 45-second event-driven countdown timer
+// Function to start the 45-second event-driven arcade countdown timer
 function startTimer() {
-  // Clear any existing active timer interval to prevent race conditions
+  // Stop any active timer interval
   clearInterval(timerInterval);
-  // Reset countdown to 45 seconds
+  // Reset time remaining to 45 seconds
   timeLeft = 45;
-  // Re-enable player interactive input controls
+  // Enable interactive answering buttons
   submitGuessBtn.disabled = false;
   guessInput.disabled = false;
 
   // Set repeating interval executing every 1,000ms (1 second)
   timerInterval = setInterval(() => {
-    // Decrement countdown counter
+    // Decrement remaining seconds
     timeLeft--;
 
-    // PUBLISHER: Dispatch custom 'timer-tick' event with remaining time payload
+    // PUBLISHER: Dispatch custom 'timer-tick' event with time remaining in payload
     const tickEvent = new CustomEvent('timer-tick', { detail: { seconds: timeLeft } });
     window.dispatchEvent(tickEvent);
 
-    // Check if time has completely elapsed
+    // Check if countdown timer has elapsed
     if (timeLeft <= 0) {
-      // Clear interval to stop timer execution
+      // Clear interval to stop repeating
       clearInterval(timerInterval);
 
       // PUBLISHER: Dispatch custom 'timer-expired' event
       const expiredEvent = new CustomEvent('timer-expired', {
-        detail: { status: 'TIMEOUT', message: '45-second limit exceeded' }
+        detail: { status: 'TIMEOUT', message: '45-second limit reached' }
       });
       window.dispatchEvent(expiredEvent);
     }
   }, 1000);
 }
 
-// SUBSCRIBER 1: Listen for custom 'timer-tick' events
+// SUBSCRIBER 1: Listen for custom 'timer-tick' event
 window.addEventListener('timer-tick', (event) => {
-  // Update visual DOM timer element
-  timerDisplay.textContent = `Time Left: ${event.detail.seconds}s`;
-  // Log real-time event firing to the Live Event Stream console
+  // Update visual timer badge in DOM
+  timerDisplay.textContent = `TIME: ${event.detail.seconds}s`;
+  // Log real-time event to MS-DOS console
   logToEventStream('timer-tick', event.detail, 'timer-tick');
 });
 
-// SUBSCRIBER 2: Listen for custom 'timer-expired' events
+// SUBSCRIBER 2: Listen for custom 'timer-expired' event
 window.addEventListener('timer-expired', (event) => {
-  // Update UI timer text to reflect expiration
-  timerDisplay.textContent = 'Time Expired! Game Over.';
-  // Disable user guessing controls
+  // Display game over status on timer badge
+  timerDisplay.textContent = 'TIME EXPIRED! GAME OVER';
+  // Disable user input controls
   submitGuessBtn.disabled = true;
   guessInput.disabled = true;
-  // Show error message
-  messageBox.style.color = 'var(--accent-error)';
-  messageBox.textContent = 'Out of time! Click "Load New Puzzle" to try again.';
-  // Log critical timeout event to console
+  // Display game over feedback
+  messageBox.style.color = 'var(--neon-red)';
+  messageBox.textContent = 'Out of time! Click [NEXT PUZZLE] to try again.';
+  // Log timeout event to MS-DOS console
   logToEventStream('timer-expired', event.detail, 'timer-expired');
 });
 
@@ -139,32 +164,31 @@ window.addEventListener('timer-expired', (event) => {
 
 // SUBSCRIBER 3: Listen for custom 'auth-register' event
 window.addEventListener('auth-register', (event) => {
-  // Log registration event to live console
+  // Log registration audit to live console
   logToEventStream('auth-register', event.detail, 'auth-register');
 });
 
 // SUBSCRIBER 4: Listen for custom 'auth-success' event
 window.addEventListener('auth-success', (event) => {
-  // Transition views: Hide login card and display authenticated gameplay dashboard
-  loginSection.classList.add('hidden');
-  gameSection.classList.remove('hidden');
-  // Update active identity display badge
+  // Transition state: Navigate user to the Main Menu Dashboard
+  switchView('dashboard');
+  // Update active username across both dashboard and game views
+  dashUserSpan.textContent = event.detail.username;
   currentUserSpan.textContent = event.detail.username;
   authMessage.textContent = '';
-  // Log successful identity establishment event to live console
+  // Log successful identity establishment to MS-DOS console
   logToEventStream('auth-success', event.detail, 'auth-success');
 });
 
 // SUBSCRIBER 5: Listen for custom 'auth-logout' event
 window.addEventListener('auth-logout', (event) => {
-  // Transition views: Show login card and hide gameplay section
-  gameSection.classList.add('hidden');
-  loginSection.classList.remove('hidden');
-  // Reset input fields and hide puzzle image
+  // Transition state: Return to login view
+  switchView('login');
+  // Reset gameplay elements
   puzzleImg.classList.add('hidden');
   guessContainer.classList.add('hidden');
   messageBox.textContent = '';
-  // Log session destruction event to live console
+  // Log logout event to MS-DOS console
   logToEventStream('auth-logout', event.detail);
 });
 
@@ -172,17 +196,37 @@ window.addEventListener('auth-logout', (event) => {
 // THEME 2: INTEROPERABILITY CUSTOM EVENT SUBSCRIBERS
 // ====================================================
 
+// Helper function to request puzzle from backend proxy
+async function loadPuzzle() {
+  messageBox.style.color = 'var(--neon-cyan)';
+  messageBox.textContent = 'FETCHING PUZZLE FROM MARC CONRAD API...';
+
+  try {
+    // Send request to our backend interoperability endpoint
+    const response = await fetch('/api/puzzle');
+    const data = await response.json();
+
+    // PUBLISHER: Dispatch custom 'puzzle-loaded' event with received image URL
+    window.dispatchEvent(new CustomEvent('puzzle-loaded', {
+      detail: { imageUrl: data.question }
+    }));
+  } catch (error) {
+    messageBox.style.color = 'var(--neon-red)';
+    messageBox.textContent = 'ERROR LOADING PUZZLE';
+  }
+}
+
 // SUBSCRIBER 6: Listen for custom 'puzzle-loaded' event
 window.addEventListener('puzzle-loaded', (event) => {
-  // Set puzzle image src to external URL from Marc Conrad's API
+  // Set image src to the URL retrieved from Marc Conrad's external API
   puzzleImg.src = event.detail.imageUrl;
-  // Reveal puzzle image and answering form
+  // Reveal puzzle image and answer form
   puzzleImg.classList.remove('hidden');
   guessContainer.classList.remove('hidden');
-  // Clear previous message and input
+  // Reset guess input and clear message box
   guessInput.value = '';
   messageBox.textContent = '';
-  // Log puzzle retrieval event to live console
+  // Log puzzle event to MS-DOS console
   logToEventStream('puzzle-loaded', { imageUrl: event.detail.imageUrl });
   // Start the 45-second event-driven countdown timer
   startTimer();
@@ -190,144 +234,152 @@ window.addEventListener('puzzle-loaded', (event) => {
 
 // SUBSCRIBER 7: Listen for custom 'guess-evaluated' event
 window.addEventListener('guess-evaluated', (event) => {
-  // Log evaluated guess event to live console
+  // Log guess evaluation event to MS-DOS console
   logToEventStream('guess-evaluated', event.detail);
 
-  // Check if player's submitted answer was correct
+  // Check if guess was correct
   if (event.detail.correct) {
-    // Stop the active timer upon puzzle completion
+    // Stop timer upon correct solution
     clearInterval(timerInterval);
-    messageBox.style.color = 'var(--accent-success)';
-    messageBox.textContent = event.detail.message;
+    messageBox.style.color = 'var(--neon-green)';
+    messageBox.textContent = `★ ${event.detail.message} ★`;
     submitGuessBtn.disabled = true;
   } else {
-    // Show incorrect feedback
-    messageBox.style.color = 'var(--accent-error)';
-    messageBox.textContent = event.detail.message;
+    // Display incorrect guess feedback
+    messageBox.style.color = 'var(--neon-red)';
+    messageBox.textContent = `✖ ${event.detail.message}`;
   }
+});
+
+// SUBSCRIBER 8: Listen for custom 'game-start' event
+window.addEventListener('game-start', (event) => {
+  logToEventStream('game-start', event.detail, 'game-start');
 });
 
 // ====================================================
 // DOM EVENT HANDLERS (DISPATCHING CUSTOM EVENTS)
 // ====================================================
 
-// DOM CLICK 1: Handle User Registration Button
+// DOM CLICK 1: User Registration Button
 registerBtn.addEventListener('click', async () => {
-  // Extract proposed username and plaintext password
   const username = usernameInput.value.trim();
   const password = passwordInput.value;
 
-  // Validate form fields are not empty
   if (!username || !password) {
-    authMessage.style.color = 'var(--accent-error)';
-    authMessage.textContent = 'Please enter both a username and password.';
+    authMessage.style.color = 'var(--neon-red)';
+    authMessage.textContent = 'ENTER USERNAME & PASSWORD!';
     return;
   }
 
-  // Send POST request to backend registration endpoint
   const response = await fetch('/api/register', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ username, password })
   });
 
-  // Parse JSON response
   const data = await response.json();
 
-  // Check if registration succeeded
   if (data.success) {
-    authMessage.style.color = 'var(--accent-success)';
+    authMessage.style.color = 'var(--neon-green)';
     authMessage.textContent = data.message;
     // PUBLISHER: Dispatch custom 'auth-register' event
     window.dispatchEvent(new CustomEvent('auth-register', {
-      detail: { username, status: 'CREATED', timestamp: Date.now() }
+      detail: { username, status: 'REGISTERED', timestamp: Date.now() }
     }));
   } else {
-    authMessage.style.color = 'var(--accent-error)';
-    authMessage.textContent = data.message || 'Registration failed.';
+    authMessage.style.color = 'var(--neon-red)';
+    authMessage.textContent = data.message || 'REGISTRATION FAILED';
   }
 });
 
-// DOM CLICK 2: Handle User Login Button
+// DOM CLICK 2: User Login Button
 loginBtn.addEventListener('click', async () => {
-  // Extract credentials from input boxes
   const username = usernameInput.value.trim();
   const password = passwordInput.value;
 
-  // Validate inputs
   if (!username || !password) {
-    authMessage.style.color = 'var(--accent-error)';
-    authMessage.textContent = 'Please enter both a username and password.';
+    authMessage.style.color = 'var(--neon-red)';
+    authMessage.textContent = 'ENTER USERNAME & PASSWORD!';
     return;
   }
 
-  // Send POST request with credentials to establish session cookie
   const response = await fetch('/api/login', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ username, password })
   });
 
-  // Parse JSON response
   const data = await response.json();
 
-  // If credentials matched bcrypt hash in SQLite
   if (data.success) {
     // PUBLISHER: Dispatch custom 'auth-success' event
     window.dispatchEvent(new CustomEvent('auth-success', {
       detail: { username: data.username, sessionEstablished: true }
     }));
   } else {
-    authMessage.style.color = 'var(--accent-error)';
-    authMessage.textContent = data.message || 'Invalid username or password.';
+    authMessage.style.color = 'var(--neon-red)';
+    authMessage.textContent = data.message || 'INVALID CREDENTIALS';
   }
 });
 
-// DOM CLICK 3: Handle User Logout Button
-logoutBtn.addEventListener('click', async () => {
-  // Request server to destroy virtual identity session and clear cookie
+// DOM CLICK 3: Start Arcade Mode Button (Transitions Dashboard -> Game)
+startGameBtn.addEventListener('click', () => {
+  // Transition view to gameplay card
+  switchView('game');
+
+  // PUBLISHER: Dispatch custom 'game-start' event
+  window.dispatchEvent(new CustomEvent('game-start', {
+    detail: { mode: 'ARCADE', player: dashUserSpan.textContent, timestamp: Date.now() }
+  }));
+
+  // Automatically trigger the first puzzle load
+  loadPuzzle();
+});
+
+// DOM CLICK 4: Back to Main Menu Button
+backToDashBtn.addEventListener('click', () => {
+  // Stop active countdown timer
+  clearInterval(timerInterval);
+  // Transition back to main menu dashboard
+  switchView('dashboard');
+  // Log navigation event
+  logToEventStream('nav-dashboard', { action: 'RETURN_TO_MAIN_MENU' });
+});
+
+// Reusable Logout Handler
+async function performLogout() {
   await fetch('/api/logout', { method: 'POST' });
-  // Stop active timer
   clearInterval(timerInterval);
   // PUBLISHER: Dispatch custom 'auth-logout' event
   window.dispatchEvent(new CustomEvent('auth-logout', {
     detail: { status: 'SESSION_DESTROYED' }
   }));
-});
+}
 
-// DOM CLICK 4: Handle Load New Puzzle Button (Interoperability)
-fetchPuzzleBtn.addEventListener('click', async () => {
-  messageBox.style.color = 'var(--accent-blue)';
-  messageBox.textContent = 'Requesting puzzle from Marc Conrad external API...';
+// DOM CLICK 5: Gameplay Logout Button
+logoutBtn.addEventListener('click', performLogout);
 
-  // Fetch puzzle from backend proxy
-  const response = await fetch('/api/puzzle');
-  const data = await response.json();
+// DOM CLICK 6: Dashboard Logout Button
+dashLogoutBtn.addEventListener('click', performLogout);
 
-  // PUBLISHER: Dispatch custom 'puzzle-loaded' event
-  window.dispatchEvent(new CustomEvent('puzzle-loaded', {
-    detail: { imageUrl: data.question }
-  }));
-});
+// DOM CLICK 7: Load New Puzzle Button
+fetchPuzzleBtn.addEventListener('click', loadPuzzle);
 
-// DOM CLICK 5: Handle Answer Submission Button
+// DOM CLICK 8: Submit Answer Guess Button
 submitGuessBtn.addEventListener('click', async () => {
   const guess = guessInput.value;
 
-  // Validate input
   if (guess === '') {
-    alert('Please enter a digit between 0 and 9');
+    alert('PLEASE ENTER A DIGIT BETWEEN 0 AND 9');
     return;
   }
 
-  // Send guess to backend to verify against session-stored solution
   const response = await fetch('/api/check-answer', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ guess })
   });
 
-  // Parse verification response
   const result = await response.json();
 
   // PUBLISHER: Dispatch custom 'guess-evaluated' event
@@ -341,12 +393,14 @@ async function checkExistingSession() {
   const res = await fetch('/api/session');
   const sessionData = await res.json();
   if (sessionData.loggedIn) {
-    // PUBLISHER: Dispatch custom 'auth-success' event for re-authenticated session
+    // Auto-login into dashboard on existing session cookie
     window.dispatchEvent(new CustomEvent('auth-success', {
       detail: { username: sessionData.username, reconnected: true }
     }));
+  } else {
+    switchView('login');
   }
 }
 
-// Run initial session check
+// Execute session verification on script boot
 checkExistingSession();

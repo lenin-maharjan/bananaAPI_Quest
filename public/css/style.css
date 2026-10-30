@@ -1,41 +1,42 @@
 /* ==================================================== */
-/* DESIGN SYSTEM: CSS CUSTOM PROPERTIES (DARK THEME)    */
+/* RETRO ARCADE DESIGN SYSTEM (8-BIT CRT AESTHETIC)     */
+/* THEME 1: COMPONENT MODULARITY & MODERN CSS VARIABLES  */
 /* ==================================================== */
 :root {
-  /* Color Palette: Dark enterprise background shades */
-  --bg-primary: #0b0f19;
-  --bg-card: #151d30;
-  --bg-card-hover: #1c2640;
-  --bg-input: #0f172a;
-  --bg-terminal: #070b14;
+  /* CRT Monitor & Arcade Cabinet Color Palette */
+  --arcade-bg: #070a10;
+  --arcade-cabinet: #101524;
+  --arcade-card-bg: #141b2d;
+  --terminal-dos-bg: #040906;
 
-  /* Accent Colors */
-  --accent-banana: #fbbf24;
-  --accent-banana-hover: #f59e0b;
-  --accent-blue: #38bdf8;
-  --accent-blue-hover: #0ea5e9;
-  --accent-success: #10b981;
-  --accent-error: #ef4444;
-  --accent-purple: #a855f7;
+  /* Neon 8-Bit Vibrant Colors */
+  --neon-green: #39ff14;
+  --neon-yellow: #ffe600;
+  --neon-pink: #ff007f;
+  --neon-cyan: #00f0ff;
+  --neon-red: #ff3131;
+  --neon-purple: #bd00ff;
 
   /* Text Colors */
-  --text-main: #f8fafc;
+  --text-main: #f0fdf4;
   --text-muted: #94a3b8;
-  --text-dim: #64748b;
+  --text-dim: #475569;
+  --dos-green: #00ff66;
 
-  /* Borders and Shadows */
-  --border-color: #334155;
-  --border-glow: rgba(56, 189, 248, 0.2);
-  --shadow-card: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.4);
-  --shadow-terminal: 0 15px 35px -5px rgba(0, 0, 0, 0.7);
+  /* Retro Pixel Borders & Shadows */
+  --pixel-border-cyan: 4px solid var(--neon-cyan);
+  --pixel-border-yellow: 4px solid var(--neon-yellow);
+  --pixel-border-green: 4px solid var(--neon-green);
+  --pixel-shadow: 4px 4px 0px #000000, 6px 6px 0px rgba(0, 240, 255, 0.4);
 
-  /* Fonts */
-  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --font-mono: 'Fira Code', 'Consolas', 'Courier New', monospace;
+  /* Typography */
+  --font-arcade: 'Press Start 2P', monospace;
+  --font-dos: 'VT323', monospace;
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
 /* ==================================================== */
-/* GLOBAL RESET & BASE STYLES                           */
+/* GLOBAL RESET & CRT MONITOR SCANLINE BACKGROUND       */
 /* ==================================================== */
 * {
   box-sizing: border-box;
@@ -44,190 +45,256 @@
 }
 
 body {
-  font-family: var(--font-sans);
-  background-color: var(--bg-primary);
+  font-family: var(--font-arcade);
+  background-color: var(--arcade-bg);
+  /* Retro CRT scanline effect across viewport */
+  background-image: 
+    linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.4) 50%),
+    linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+  background-size: 100% 4px, 6px 100%;
   color: var(--text-main);
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  padding: 24px;
+  padding: 20px;
 }
 
-/* Application Header */
+/* Retro Arcade Header */
 header {
   text-align: center;
   margin-bottom: 24px;
 }
 
 header h1 {
-  font-size: 2rem;
-  font-weight: 800;
-  letter-spacing: -0.025em;
-  color: var(--accent-banana);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
+  font-size: 1.35rem;
+  line-height: 1.6;
+  color: var(--neon-yellow);
+  text-shadow: 3px 3px 0px #000, 0 0 10px rgba(255, 230, 0, 0.6);
+  letter-spacing: 1px;
 }
 
 header p {
-  color: var(--text-muted);
-  font-size: 0.95rem;
+  font-family: var(--font-dos);
+  font-size: 1.25rem;
+  color: var(--neon-cyan);
+  letter-spacing: 2px;
   margin-top: 6px;
+  text-transform: uppercase;
+  text-shadow: 0 0 5px rgba(0, 240, 255, 0.5);
 }
 
 /* ==================================================== */
-/* MAIN DASHBOARD TWO-COLUMN LAYOUT                     */
+/* MAIN TWO-COLUMN DASHBOARD LAYOUT                     */
 /* ==================================================== */
 .dashboard-layout {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1.1fr 0.9fr;
   gap: 24px;
-  max-width: 1200px;
+  max-width: 1250px;
   width: 100%;
   margin: 0 auto;
   align-items: start;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 950px) {
   .dashboard-layout {
     grid-template-columns: 1fr;
   }
 }
 
 /* ==================================================== */
-/* APPLICATION CARD STYLES                              */
+/* ARCADE CABINET CARD PANELS                           */
 /* ==================================================== */
 .card {
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: 14px;
-  padding: 28px;
-  box-shadow: var(--shadow-card);
-  transition: transform 0.2s ease, border-color 0.2s ease;
-}
-
-.card:hover {
-  border-color: rgba(251, 191, 36, 0.4);
+  background: var(--arcade-card-bg);
+  border: var(--pixel-border-cyan);
+  box-shadow: var(--pixel-shadow);
+  padding: 24px;
+  position: relative;
+  transition: transform 0.1s ease;
 }
 
 .card h2 {
-  font-size: 1.35rem;
-  color: var(--text-main);
-  margin-bottom: 6px;
+  font-size: 0.95rem;
+  color: var(--neon-yellow);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 8px;
+  text-shadow: 2px 2px 0px #000;
 }
 
 .card p.subtitle {
+  font-family: var(--font-dos);
+  font-size: 1.15rem;
   color: var(--text-muted);
-  font-size: 0.88rem;
+  letter-spacing: 1px;
   margin-bottom: 20px;
 }
 
-/* Form Groups and Inputs */
+/* Form Inputs (Arcade Console Style) */
 .form-group {
-  margin-bottom: 16px;
+  margin-bottom: 18px;
 }
 
 label {
   display: block;
-  font-size: 0.82rem;
-  font-weight: 600;
+  font-size: 0.65rem;
+  color: var(--neon-cyan);
+  letter-spacing: 1px;
+  margin-bottom: 8px;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--text-muted);
-  margin-bottom: 6px;
 }
 
 input {
   width: 100%;
   padding: 12px 14px;
-  background-color: var(--bg-input);
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  color: var(--text-main);
-  font-size: 0.95rem;
-  font-family: var(--font-sans);
+  background-color: #0b0f19;
+  border: 3px solid var(--neon-cyan);
+  color: var(--neon-green);
+  font-family: var(--font-arcade);
+  font-size: 0.75rem;
+  box-shadow: inset 3px 3px 0px #000;
   transition: border-color 0.2s, box-shadow 0.2s;
 }
 
 input:focus {
   outline: none;
-  border-color: var(--accent-blue);
-  box-shadow: 0 0 0 3px var(--border-glow);
+  border-color: var(--neon-yellow);
+  box-shadow: 0 0 10px rgba(255, 230, 0, 0.4), inset 3px 3px 0px #000;
 }
 
-/* Buttons */
+/* ==================================================== */
+/* PIXELATED ARCADE BUTTONS                             */
+/* ==================================================== */
 button {
-  width: 100%;
-  padding: 12px 16px;
-  font-size: 0.95rem;
-  font-weight: 600;
-  border-radius: 8px;
-  border: none;
+  font-family: var(--font-arcade);
+  font-size: 0.75rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 14px 18px;
+  border: 3px solid #000;
+  box-shadow: 4px 4px 0px #000;
   cursor: pointer;
-  transition: all 0.2s ease;
+  width: 100%;
+  transition: all 0.1s ease;
+  position: relative;
+}
+
+button:active {
+  transform: translate(3px, 3px);
+  box-shadow: 1px 1px 0px #000;
 }
 
 #login-btn {
-  background-color: var(--accent-banana);
-  color: #0b0f19;
+  background-color: var(--neon-yellow);
+  color: #000;
 }
-
 #login-btn:hover {
-  background-color: var(--accent-banana-hover);
-  transform: translateY(-1px);
+  background-color: #fff033;
 }
 
 #register-btn {
-  background-color: #2563eb;
-  color: #ffffff;
+  background-color: var(--neon-pink);
+  color: #fff;
+}
+#register-btn:hover {
+  background-color: #ff3399;
 }
 
-#register-btn:hover {
-  background-color: #1d4ed8;
-  transform: translateY(-1px);
+#start-game-btn {
+  background-color: var(--neon-green);
+  color: #000;
+  font-size: 0.85rem;
+  padding: 18px;
+  margin-top: 15px;
+  animation: pulseNeon 1.5s infinite alternate;
+}
+
+@keyframes pulseNeon {
+  from { box-shadow: 4px 4px 0px #000, 0 0 10px rgba(57, 255, 20, 0.4); }
+  to { box-shadow: 4px 4px 0px #000, 0 0 25px rgba(57, 255, 20, 0.9); }
 }
 
 #fetch-puzzle-btn {
-  background-color: var(--accent-blue);
-  color: #0b0f19;
-  margin-top: 10px;
-}
-
-#fetch-puzzle-btn:hover {
-  background-color: var(--accent-blue-hover);
+  background-color: var(--neon-cyan);
+  color: #000;
+  margin-top: 12px;
 }
 
 #submit-guess-btn {
-  background-color: var(--accent-success);
-  color: #0b0f19;
-  margin-top: 10px;
+  background-color: var(--neon-yellow);
+  color: #000;
+  margin-top: 12px;
 }
 
-#submit-guess-btn:hover {
-  background-color: #059669;
+#back-to-dash-btn {
+  background-color: #475569;
+  color: #fff;
+  margin-top: 14px;
+}
+
+.danger-btn {
+  background-color: var(--neon-red) !important;
+  color: #fff !important;
+  margin-top: 14px;
 }
 
 button:disabled {
-  opacity: 0.5;
+  opacity: 0.4;
   cursor: not-allowed;
   transform: none !important;
+  box-shadow: 4px 4px 0px #000 !important;
+}
+
+/* ==================================================== */
+/* DASHBOARD MENU STATS BADGES                          */
+/* ==================================================== */
+.arcade-stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin: 18px 0;
+}
+
+.stat-box {
+  background: #090d16;
+  border: 2px solid #334155;
+  padding: 12px;
+  text-align: center;
+}
+
+.stat-label {
+  font-size: 0.55rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.stat-val {
+  font-family: var(--font-dos);
+  font-size: 1.4rem;
+  color: var(--neon-green);
 }
 
 /* ==================================================== */
 /* GAMEPLAY & TIMER ELEMENTS                            */
 /* ==================================================== */
 .timer-badge {
-  background: rgba(239, 68, 68, 0.15);
-  border: 1px solid rgba(239, 68, 68, 0.3);
-  color: #f87171;
-  font-size: 1.15rem;
-  font-weight: 700;
-  font-family: var(--font-mono);
+  background: #2b0b14;
+  border: 3px solid var(--neon-red);
+  color: var(--neon-red);
+  font-family: var(--font-arcade);
+  font-size: 0.85rem;
   text-align: center;
-  padding: 10px;
-  border-radius: 8px;
+  padding: 12px;
   margin-bottom: 18px;
+  box-shadow: 3px 3px 0px #000;
+  animation: timerGlow 1s infinite alternate;
+}
+
+@keyframes timerGlow {
+  from { text-shadow: 0 0 5px var(--neon-red); }
+  to { text-shadow: 0 0 15px var(--neon-red); }
 }
 
 #puzzle-img {
@@ -235,156 +302,141 @@ button:disabled {
   height: auto;
   display: block;
   margin: 16px auto;
-  border-radius: 10px;
-  border: 2px solid var(--border-color);
+  border: 4px solid var(--neon-yellow);
+  box-shadow: 4px 4px 0px #000;
   background: #ffffff;
+  image-rendering: pixelated;
 }
 
 .badge-user {
-  background: rgba(16, 185, 129, 0.15);
-  border: 1px solid rgba(16, 185, 129, 0.4);
-  color: #34d399;
-  padding: 4px 10px;
-  border-radius: 20px;
-  font-size: 0.85rem;
-  font-weight: 600;
+  background: rgba(57, 255, 20, 0.15);
+  border: 2px solid var(--neon-green);
+  color: var(--neon-green);
+  padding: 4px 8px;
+  font-size: 0.65rem;
+  letter-spacing: 1px;
 }
 
-#message-box {
-  min-height: 24px;
+#message-box, #auth-message {
+  font-family: var(--font-dos);
+  font-size: 1.25rem;
+  letter-spacing: 1px;
+  min-height: 28px;
   text-align: center;
-  font-weight: 600;
-  margin-top: 16px;
-  font-size: 0.95rem;
+  margin-top: 14px;
 }
 
 /* ==================================================== */
-/* THEME 2: LIVE EVENT STREAM CONSOLE (HACKER TERMINAL) */
+/* THEME 2: RETRO MS-DOS LIVE EVENT STREAM TERMINAL     */
 /* ==================================================== */
 #event-stream-console {
-  background-color: var(--bg-terminal);
-  border: 1px solid var(--border-color);
-  border-radius: 14px;
-  box-shadow: var(--shadow-terminal);
+  background-color: var(--terminal-dos-bg);
+  border: 4px solid var(--neon-green);
+  box-shadow: 5px 5px 0px #000, 0 0 15px rgba(0, 255, 102, 0.25);
   display: flex;
   flex-direction: column;
-  height: 580px;
+  height: 620px;
   overflow: hidden;
+  position: relative;
 }
 
-/* Terminal Title Bar */
+/* MS-DOS Header Bar */
 .terminal-header {
-  background-color: #0f172a;
-  border-bottom: 1px solid var(--border-color);
-  padding: 12px 16px;
+  background-color: var(--neon-green);
+  color: #000;
+  padding: 8px 12px;
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
 
-.terminal-dots {
-  display: flex;
-  gap: 8px;
-}
-
-.dot {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-}
-
-.dot-red { background: #ef4444; }
-.dot-yellow { background: #f59e0b; }
-.dot-green { background: #10b981; }
-
 .terminal-title {
-  font-family: var(--font-mono);
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--accent-blue);
-  display: flex;
-  align-items: center;
-  gap: 6px;
+  font-family: var(--font-arcade);
+  font-size: 0.65rem;
+  font-weight: bold;
 }
 
 .clear-btn {
-  background: transparent;
-  color: var(--text-dim);
-  border: 1px solid var(--border-color);
-  padding: 4px 8px;
-  font-size: 0.75rem;
-  border-radius: 4px;
+  background: #000;
+  color: var(--neon-green);
+  border: 2px solid #000;
+  padding: 2px 8px;
+  font-size: 0.55rem;
+  box-shadow: none;
   width: auto;
   cursor: pointer;
 }
 
 .clear-btn:hover {
-  color: var(--text-main);
-  border-color: var(--text-muted);
+  background: #111;
+  color: #fff;
 }
 
-/* Terminal Log Area */
+/* MS-DOS Log Scrollable Area */
 .terminal-body {
   padding: 16px;
-  font-family: var(--font-mono);
-  font-size: 0.85rem;
-  line-height: 1.6;
+  font-family: var(--font-dos);
+  font-size: 1.15rem;
+  color: var(--dos-green);
+  line-height: 1.4;
   overflow-y: auto;
   flex: 1;
   display: flex;
   flex-direction: column;
   gap: 8px;
+  /* Green CRT glow effect */
+  text-shadow: 0 0 4px rgba(0, 255, 102, 0.6);
 }
 
-/* Scrollbar Styling */
 .terminal-body::-webkit-scrollbar {
-  width: 6px;
+  width: 8px;
 }
 .terminal-body::-webkit-scrollbar-thumb {
-  background: var(--border-color);
-  border-radius: 4px;
+  background: var(--neon-green);
+}
+.terminal-body::-webkit-scrollbar-track {
+  background: #000;
 }
 
-/* Event Log Items */
+/* Event Log Entry */
 .event-entry {
-  display: flex;
-  flex-direction: column;
-  background: rgba(15, 23, 42, 0.6);
-  border-left: 3px solid var(--accent-blue);
-  padding: 6px 10px;
-  border-radius: 4px;
-  animation: fadeIn 0.2s ease-in-out;
+  background: rgba(0, 255, 102, 0.05);
+  border-left: 3px solid var(--neon-green);
+  padding: 6px 8px;
+  animation: fadeIn 0.15s ease-in-out;
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(4px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; transform: translateX(-4px); }
+  to { opacity: 1; transform: translateX(0); }
 }
 
 .event-meta {
   display: flex;
   justify-content: space-between;
-  font-size: 0.72rem;
-  color: var(--text-dim);
+  font-size: 0.95rem;
+  color: var(--neon-cyan);
   margin-bottom: 2px;
 }
 
 .event-name {
   font-weight: bold;
-  color: var(--accent-banana);
+  color: var(--neon-yellow);
 }
 
-.event-name.timer-tick { color: var(--accent-blue); }
-.event-name.timer-expired { color: var(--accent-error); }
-.event-name.auth-success { color: var(--accent-success); }
-.event-name.auth-register { color: var(--accent-purple); }
+.event-name.timer-tick { color: var(--neon-cyan); }
+.event-name.timer-expired { color: var(--neon-red); }
+.event-name.auth-success { color: var(--neon-green); }
+.event-name.auth-register { color: var(--neon-pink); }
+.event-name.game-start { color: var(--neon-yellow); }
 
 .event-payload {
   color: #e2e8f0;
   word-break: break-all;
+  font-size: 1.05rem;
 }
 
-/* Helper Utilities */
+/* Utility Class */
 .hidden {
   display: none !important;
 }

@@ -3,114 +3,149 @@
 <head>
   <!-- Character encoding standard -->
   <meta charset="UTF-8">
-  <!-- Responsive layout meta tag for cross-device scaling -->
+  <!-- Responsive layout meta tag -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <!-- Application Title -->
-  <title>Banana Quest Enterprise - Distributed System</title>
-  <!-- Link to Dark Theme modular stylesheet with CSS variables -->
+  <!-- Retro Arcade Page Title -->
+  <title>🍌 BANANA QUEST // RETRO ARCADE EDITION</title>
+
+  <!-- Import Google Fonts: 'Press Start 2P' (8-bit headers) & 'VT323' (MS-DOS terminal text) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+
+  <!-- Link to external Retro Arcade stylesheet -->
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
-  <!-- Top application branding header -->
+  <!-- Top Retro Arcade Branding Header -->
   <header>
-    <h1>🍌 Banana Quest Enterprise</h1>
-    <p>Distributed Educational Architecture &middot; Event-Driven Core &middot; Virtual Identity</p>
+    <h1>👾 BANANA QUEST ARCADE 🍌</h1>
+    <p>[ 1 PLAYER MODE &middot; DISTRIBUTED SYSTEM &middot; RETRO EDITION ]</p>
   </header>
 
-  <!-- Two-Column Responsive Dashboard Layout -->
+  <!-- Two-Column Responsive Arcade Layout -->
   <div class="dashboard-layout">
 
     <!-- ==================================================== -->
-    <!-- COLUMN 1: INTERACTIVE USER APPLICATION PANELS        -->
+    <!-- COLUMN 1: INTERACTIVE USER PANELS (THREE SECTIONS)   -->
     <!-- ==================================================== -->
     <main class="main-content">
 
-      <!-- THEME 4: VIRTUAL IDENTITY (LOGIN & REGISTRATION CARD) -->
+      <!-- SECTION 1: INSERT COIN / VIRTUAL IDENTITY LOGIN -->
       <section id="login-section" class="card">
-        <h2>Virtual Identity Access</h2>
-        <p class="subtitle">Secure authentication using SQLite & bcrypt hashing</p>
+        <h2>=== INSERT COIN / LOGIN ===</h2>
+        <p class="subtitle">AUTHENTICATE WITH SQLITE DATABASE &amp; BCRYPT HASHING</p>
 
         <!-- Username Input Field -->
         <div class="form-group">
-          <label for="username">Username:</label>
-          <input type="text" id="username" placeholder="e.g. enterprise_student" autocomplete="username">
+          <label for="username">&gt; USERNAME:</label>
+          <input type="text" id="username" placeholder="PLAYER_1" autocomplete="username">
         </div>
 
         <!-- Password Input Field -->
         <div class="form-group">
-          <label for="password">Password:</label>
-          <input type="password" id="password" placeholder="e.g. secure_banana_pass" autocomplete="current-password">
+          <label for="password">&gt; PASSWORD:</label>
+          <input type="password" id="password" placeholder="******" autocomplete="current-password">
         </div>
 
-        <!-- Authentication Buttons (Log In & Register) -->
-        <div style="display: flex; gap: 12px; margin-top: 8px;">
-          <button id="login-btn">Log In</button>
-          <button id="register-btn">Register</button>
+        <!-- 8-Bit Action Buttons -->
+        <div style="display: flex; gap: 12px; margin-top: 10px;">
+          <button id="login-btn">[ 1P LOGIN ]</button>
+          <button id="register-btn">[ NEW REGISTER ]</button>
         </div>
 
-        <!-- Feedback message area for authentication results -->
+        <!-- Authentication feedback box -->
         <div id="auth-message"></div>
       </section>
 
-      <!-- THEME 2 & 3: GAMEPLAY CARD (INTEROPERABILITY & EVENTS) -->
-      <section id="game-section" class="card hidden">
-        <h2>Banana Quest Gameplay</h2>
-        <p class="subtitle">Active Identity: <span id="current-user" class="badge-user"></span></p>
+      <!-- SECTION 2: NEW! MAIN MENU ARCADE DASHBOARD -->
+      <section id="dashboard-section" class="card hidden">
+        <h2>=== PLAYER HQ DASHBOARD ===</h2>
+        <p class="subtitle">AUTHENTICATED AGENT: <span id="dash-user" class="badge-user"></span></p>
 
-        <!-- THEME 3: EVENT-DRIVEN COUNTDOWN TIMER BADGE -->
-        <div id="timer-display" class="timer-badge">Time Left: 45s</div>
-
-        <!-- THEME 2: 3RD-PARTY PUZZLE IMAGE FETCHED VIA REST API -->
-        <img id="puzzle-img" src="" alt="Banana Puzzle Question" class="hidden">
-
-        <!-- Button to trigger Interoperability fetch request -->
-        <button id="fetch-puzzle-btn">Load New Puzzle</button>
-
-        <!-- Answer input container -->
-        <div id="guess-container" class="hidden" style="margin-top: 16px;">
-          <div class="form-group">
-            <label for="guess-input">Enter Solution Digit (0-9):</label>
-            <input type="number" id="guess-input" min="0" max="9" placeholder="Enter single digit answer">
+        <!-- Retro Status Badges Grid -->
+        <div class="arcade-stats-grid">
+          <div class="stat-box">
+            <div class="stat-label">DIFFICULTY</div>
+            <div class="stat-val">HARD</div>
           </div>
-          <button id="submit-guess-btn">Submit Answer</button>
+          <div class="stat-box">
+            <div class="stat-label">CREDITS</div>
+            <div class="stat-val">99</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-label">TIME LIMIT</div>
+            <div class="stat-val">45 SEC</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-label">API STATUS</div>
+            <div class="stat-val" style="color: var(--neon-cyan);">ONLINE</div>
+          </div>
         </div>
 
-        <!-- Gameplay result and verification feedback box -->
+        <!-- Start Game Trigger -->
+        <button id="start-game-btn">🕹️ START ARCADE MODE</button>
+
+        <!-- Main Menu Logout -->
+        <button id="dash-logout-btn" class="danger-btn">⚡ LOG OUT</button>
+      </section>
+
+      <!-- SECTION 3: ARCADE GAMEPLAY & PUZZLE CHALLENGE -->
+      <section id="game-section" class="card hidden">
+        <h2>=== PUZZLE CHALLENGE ===</h2>
+        <p class="subtitle">PLAYER: <span id="current-user" class="badge-user"></span></p>
+
+        <!-- THEME 3: EVENT-DRIVEN COUNTDOWN TIMER BADGE -->
+        <div id="timer-display" class="timer-badge">TIME: 45s</div>
+
+        <!-- THEME 2: 3RD-PARTY PUZZLE IMAGE (MARC CONRAD REST API) -->
+        <img id="puzzle-img" src="" alt="Arcade Banana Math Puzzle" class="hidden">
+
+        <!-- Button to fetch next puzzle -->
+        <button id="fetch-puzzle-btn">[ NEXT PUZZLE ]</button>
+
+        <!-- Guess input container -->
+        <div id="guess-container" class="hidden" style="margin-top: 18px;">
+          <div class="form-group">
+            <label for="guess-input">&gt; ENTER DIGIT (0-9):</label>
+            <input type="number" id="guess-input" min="0" max="9" placeholder="?">
+          </div>
+          <button id="submit-guess-btn">[ FIRE ANSWER ]</button>
+        </div>
+
+        <!-- Gameplay result feedback box -->
         <div id="message-box"></div>
 
-        <!-- Logout button to revoke virtual identity session -->
-        <button id="logout-btn" style="background-color: var(--accent-error); color: white; margin-top: 24px;">Log Out</button>
+        <!-- Navigation Buttons -->
+        <div style="display: flex; gap: 10px; margin-top: 16px;">
+          <button id="back-to-dash-btn" style="flex: 1;">🔙 MAIN MENU</button>
+          <button id="logout-btn" class="danger-btn" style="flex: 1; margin-top: 14px;">⚡ LOG OUT</button>
+        </div>
       </section>
 
     </main>
 
     <!-- ==================================================== -->
-    <!-- COLUMN 2: LIVE PUB/SUB EVENT STREAM CONSOLE          -->
+    <!-- COLUMN 2: MS-DOS LIVE PUB/SUB EVENT STREAM CONSOLE   -->
     <!-- THEME 2: EVENT-DRIVEN ARCHITECTURE VISUALIZATION     -->
     <!-- ==================================================== -->
     <aside id="event-stream-console">
 
-      <!-- Terminal window top header bar -->
+      <!-- MS-DOS Title Bar -->
       <div class="terminal-header">
-        <div class="terminal-dots">
-          <span class="dot dot-red"></span>
-          <span class="dot dot-yellow"></span>
-          <span class="dot dot-green"></span>
-        </div>
-        <div class="terminal-title">📡 Live Event Stream (Pub/Sub Bus)</div>
-        <button id="clear-stream-btn" class="clear-btn">Clear</button>
+        <span class="terminal-title">C:\BANANA_QUEST\EVENT_BUS.EXE</span>
+        <button id="clear-stream-btn" class="clear-btn">[CLS]</button>
       </div>
 
-      <!-- Real-time scrolling container where published events appear -->
+      <!-- Real-time Event Log Body -->
       <div id="event-log-container" class="terminal-body">
-        <!-- Initial boot message -->
         <div class="event-entry">
           <div class="event-meta">
-            <span>SYSTEM BOOT</span>
+            <span>MS-DOS 6.22 EVENT SUBSYSTEM</span>
             <span>READY</span>
           </div>
-          <div class="event-payload">Listening to window CustomEvent bus...</div>
+          <div class="event-payload">&gt; Listening on window CustomEvent bus...</div>
         </div>
       </div>
 
@@ -118,7 +153,7 @@
 
   </div>
 
-  <!-- Modular frontend logic connecting CustomEvents, Interoperability, and Auth -->
+  <!-- Modular frontend logic connecting CustomEvents, Interoperability, and State Machine -->
   <script src="js/app.js"></script>
 </body>
 </html>
