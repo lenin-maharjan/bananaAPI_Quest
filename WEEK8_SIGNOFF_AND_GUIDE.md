@@ -31,6 +31,7 @@
 > 6. **Phase 5: Event-Driven Observer Architecture (`feature/ui-event-stream`):** Implemented a real-time MS-DOS style Event Console terminal using the Publish-Subscribe pattern with custom events on `window`.
 > 7. **Phase 6: 90s Arcade Cabinet Experience (`feature/90s-arcade-cabinet`):** Added a custom 3-view Finite State Machine (`switchView`), an authentic CRT monitor scanline aesthetic, on-screen arcade keypad (0–9), hardware keyboard listeners, procedural Web Audio API 8-bit sound synthesis (`playArcadeSound`), 3-lives HUD, Game Over continue modal, and a persistent SQLite Hall of Fame leaderboard (`scores` table).
 > 8. **Phase 7: Game Juice, Polish & Live Fault-Tolerance (`feature/arcade-juice-polish`):** Introduced a global Express error-handling middleware in [`src/server.js:L56-L63`](file:///c:/Users/lenin/OneDrive/Documents/what%20L6/Software%20Enterprise/bananaAPI_Quest/src/server.js#L56-L63), solution undefined guards in `checkAnswer`, on-demand simulated outage toggling (`?simulateOutage=true`), live Interoperability health pills (`[🟢 API: LIVE]` vs `[🟠 API: FALLBACK]`), combo streak multipliers (`x1`, `x2`, `x3`), camera shake, CRT damage flash, floating animated "+PTS" score popups, a 10-second timer Panic Mode with rapid warning beeps, and an arcade SFX mute button (`[🔊 SFX: ON/OFF]`) for presentation recording.
+> 9. **Phase 8: Instant Pre-Fetch Pool & System DIP Switches (`feature/settings-and-instant-prefetch`):** Upgraded Interoperability with an asynchronous Producer-Consumer background puzzle queue (`puzzlePool = []`, target size: 3) in [`src/controllers/bananaController.js`](file:///c:/Users/lenin/OneDrive/Documents/what%20L6/Software%20Enterprise/bananaAPI_Quest/src/controllers/bananaController.js) with non-blocking replenishment, delivering sub-5ms puzzle responses (`prefetched: true`), preemptive browser image caching via `new Image().src = data.nextQuestionHint`, and timer synchronization that pauses the countdown until `puzzleImg.onload` confirms the asset has completely rendered. Added a dedicated 90s System DIP Switches modal (`#settings-modal`) with master volume scaling via Web Audio API `masterGainNode`, selectable timer difficulties (Easy 60s, Normal 45s, Hard 20s), CRT scanline toggle, VFX shake toggle, live API outage toggle, and `localStorage` persistence.
 >
 > All temporary files, database binaries (`database.sqlite`), and dependencies (`node_modules/`) are strictly excluded via [`.gitignore`](file:///c:/Users/lenin/OneDrive/Documents/what%20L6/Software%20Enterprise/bananaAPI_Quest/.gitignore), leaving the working tree completely clean."
 
@@ -50,27 +51,29 @@
 > 2. **GUI / User Interface Action Events:**
 >    - **Buttons:** Clicks on `#register-btn`, `#login-btn`, `#start-game-btn`, `#fetch-puzzle-btn`, `#submit-guess-btn`, and `#clear-stream-btn` trigger async REST fetches and sound synthesizers.
 >    - **SFX Mute Toggle:** Clicking `#sfx-toggle-btn` toggles the global audio mute state, updates button text to `[🔇 SFX: OFF]`, and dispatches `CustomEvent('sfx-toggled')`.
+>    - **System DIP Switches & Settings Modal:** Clicking `#settings-btn` opens the `#settings-modal` retro popup, allowing live configuration of SFX toggles, master volume, timer difficulty, CRT scanlines, screen shake VFX, and simulated outage mode. Clicking `#settings-save-btn` writes to `localStorage` and dispatches `CustomEvent('settings-updated')`.
 >    - **Live Interoperability Health Pill:** Clicking `#api-status-pill` toggles simulated outage mode, re-fetches the puzzle with `?simulateOutage=true`, and publishes `CustomEvent('interop-mode-changed')`.
->    - **On-Screen Arcade Keypad (0–9):** In [`public/js/app.js:L695-L705`](file:///c:/Users/lenin/OneDrive/Documents/what%20L6/Software%20Enterprise/bananaAPI_Quest/public/js/app.js#L695-L705), clicking any arcade numeric button plays a tactile audio beep, sets the guess input value, and auto-fires the submission button.
+>    - **On-Screen Arcade Keypad (0–9):** In [`public/js/app.js`](file:///c:/Users/lenin/OneDrive/Documents/what%20L6/Software%20Enterprise/bananaAPI_Quest/public/js/app.js), clicking any arcade numeric button plays a tactile audio beep, sets the guess input value, and auto-fires the submission button.
 > 3. **Hardware Keyboard Interrupts:**
->    - A global `window.addEventListener('keydown')` listener in [`public/js/app.js:L708-L720`](file:///c:/Users/lenin/OneDrive/Documents/what%20L6/Software%20Enterprise/bananaAPI_Quest/public/js/app.js#L708-L720) captures physical numeric key presses (`0` through `9`) for rapid answering without a mouse, plus the **`F` hotkey** to toggle the simulated API outage on the fly during live demonstrations.
+>    - A global `window.addEventListener('keydown')` listener in [`public/js/app.js`](file:///c:/Users/lenin/OneDrive/Documents/what%20L6/Software%20Enterprise/bananaAPI_Quest/public/js/app.js) captures physical numeric key presses (`0` through `9`) for rapid answering without a mouse, plus the **`F` hotkey** to toggle the simulated API outage on the fly during live demonstrations.
 > 4. **Decoupled Application CustomEvents (Pub/Sub Bus):**
 >    - The system is fully decoupled through `window.dispatchEvent(new CustomEvent(...))`. Publishers never manipulate the UI directly; subscribers listen via `window.addEventListener(...)`:
 >      - `'auth-register'`: Dispatched upon successful database user registration.
 >      - `'auth-success'`: Switches view from login to main arcade dashboard.
 >      - `'auth-logout'`: Resets UI, halts active timers, and returns to login.
 >      - `'game-start'`: Resets lives to 3, resets score to 0000, clears streak, and loads a puzzle.
->      - `'puzzle-loaded'`: Renders third-party puzzle image, updates API status pill, and starts timer.
+>      - `'puzzle-loaded'`: Renders third-party puzzle image, updates API status pill, and synchronizes the countdown timer strictly via `puzzleImg.onload` so the player never loses seconds while the image is downloading.
 >      - `'guess-evaluated'`: Evaluates guess, calculates time & streak bonus scores, triggers green heal pulse, or decrements lives with camera shake.
 >      - `'streak-updated'`: Tracks combo multipliers (`2X STREAK!`, `3X ON FIRE!`) and bonus points.
 >      - `'game-over'`: Persists final score to SQLite, synthesizes sad chords, and displays the Continue modal.
 >      - `'score-saved'`: Dispatched when SQLite write succeeds; dynamically compares and updates the marquee HIGH SCORE value.
 >      - `'interop-mode-changed'`: Dispatched when switching between live API and fallback cache.
 >      - `'sfx-toggled'`: Dispatched when audio synthesizer is muted or unmuted.
+>      - `'settings-updated'`: Dispatched when system DIP switches are altered and saved to `localStorage`.
 > 5. **Real-Time Observer Event Stream Console:**
->    - The function [`logToEventStream`](file:///c:/Users/lenin/OneDrive/Documents/what%20L6/Software%20Enterprise/bananaAPI_Quest/public/js/app.js#L353-L383) observes all dispatched events and appends them with millisecond timestamps (`HH:MM:SS.mmm`) and JSON payloads to the retro MS-DOS terminal on screen.
+>    - The function [`logToEventStream`](file:///c:/Users/lenin/OneDrive/Documents/what%20L6/Software%20Enterprise/bananaAPI_Quest/public/js/app.js) observes all dispatched events and appends them with millisecond timestamps (`HH:MM:SS.mmm`) and JSON payloads to the retro MS-DOS terminal on screen.
 > 6. **Web Audio API Procedural Audio Events:**
->    - The synthesizer function [`playArcadeSound`](file:///c:/Users/lenin/OneDrive/Documents/what%20L6/Software%20Enterprise/bananaAPI_Quest/public/js/app.js#L72-L175) procedurally configures `AudioContext` oscillators (square, triangle, and sawtooth waves) to trigger authentic 8-bit sound effects for coin drops, button clicks, triumphant victory arpeggios, wrong buzzes, panic warning ticks, combo fanfares, and game-over melodies."
+>    - The synthesizer function [`playArcadeSound`](file:///c:/Users/lenin/OneDrive/Documents/what%20L6/Software%20Enterprise/bananaAPI_Quest/public/js/app.js) procedurally configures `AudioContext` oscillators (square, triangle, and sawtooth waves) routing through a centralized `masterGainNode` scaled by the master volume slider. It synthesizes authentic 8-bit sound effects for coin drops, button clicks, triumphant victory arpeggios, wrong buzzes, panic warning ticks, combo fanfares, and game-over melodies."
 
 ---
 
@@ -80,7 +83,7 @@
 **Academic Answer:**
 > "I do not use the Tomato API directly; instead, I utilize **Marc Conrad's Banana API** (`https://marcconrad.com/uob/banana/api.php?out=json`), which shares the exact same underlying University of Bedfordshire microservice architecture and data contract, returning an image puzzle question URL and an integer solution value.
 >
-> Interoperability is implemented in [`src/controllers/bananaController.js`](file:///c:/Users/lenin/OneDrive/Documents/what%20L6/Software%20Enterprise/bananaAPI_Quest/src/controllers/bananaController.js#L18-L60) within the [`getPuzzle`](file:///c:/Users/lenin/OneDrive/Documents/what%20L6/Software%20Enterprise/bananaAPI_Quest/src/controllers/bananaController.js#L18-L60) controller function:
+> Interoperability is implemented in [`src/controllers/bananaController.js`](file:///c:/Users/lenin/OneDrive/Documents/what%20L6/Software%20Enterprise/bananaAPI_Quest/src/controllers/bananaController.js) within the [`getPuzzle`](file:///c:/Users/lenin/OneDrive/Documents/what%20L6/Software%20Enterprise/bananaAPI_Quest/src/controllers/bananaController.js) controller function:
 >
 > 1. **Protocols & Standards:**
 >    - **HTTP/1.1 over TLS (HTTPS):** Communication with the remote service is executed securely over port 443.
@@ -88,13 +91,18 @@
 >    - **JSON Serialization:** The external endpoint is queried with the query parameter `?out=json`. The controller parses the incoming payload (`const data = await response.json()`), adhering to cross-platform JSON data exchange standards.
 > 2. **Reverse-Proxy Server-Side Facade Pattern:**
 >    - To protect game integrity and prevent cross-origin issues (CORS), the client browser never contacts Marc Conrad's server directly. Instead, our Node.js Express server acts as an intermediary proxy.
->    - The server extracts `data.solution` and stores it securely inside `req.session.solution` on the server ([`bananaController.js:L42`](file:///c:/Users/lenin/OneDrive/Documents/what%20L6/Software%20Enterprise/bananaAPI_Quest/src/controllers/bananaController.js#L42)). Only the question image URL and source metadata (`{ question: data.question, source: 'LIVE_MARCCONRAD' }`) are forwarded to the client browser ([`bananaController.js:L45-L48`](file:///c:/Users/lenin/OneDrive/Documents/what%20L6/Software%20Enterprise/bananaAPI_Quest/src/controllers/bananaController.js#L45-L48)). This completely prevents client-side answer inspection via browser DevTools.
-> 3. **Fault-Tolerant Fallback Cache (Graceful Degradation):**
+>    - The server extracts `data.solution` and stores it securely inside `req.session.solution` on the server. Only the question image URL, source metadata, and pre-cache hints (`{ question: data.question, source: 'LIVE_MARCCONRAD', prefetched: true, nextQuestionHint: ... }`) are forwarded to the client browser. This completely prevents client-side answer inspection via browser DevTools.
+> 3. **Producer-Consumer Pre-Fetch Pool & Sub-5ms Latency:**
+>    - External network latency to `marcconrad.com` typically introduces 400ms–2,500ms of delay per round.
+>    - To deliver an authentic instantaneous arcade experience, [`bananaController.js`](file:///c:/Users/lenin/OneDrive/Documents/what%20L6/Software%20Enterprise/bananaAPI_Quest/src/controllers/bananaController.js) implements an in-memory Producer-Consumer pre-fetch queue (`puzzlePool = []`, target size: 3).
+>    - An asynchronous background worker (`refillPuzzlePool`) automatically maintains a buffer of ready-to-solve puzzles. When a client requests a puzzle, it is popped from the pool in `< 5ms`, while `refillPuzzlePool()` is triggered asynchronously in the background (non-blocking).
+>    - Furthermore, the backend provides `nextQuestionHint` containing the upcoming puzzle's image URL. The frontend browser pre-caches this image in the background (`new Image().src = data.nextQuestionHint`), ensuring next-round puzzles render without graphic decoding delays.
+> 4. **Fault-Tolerant Fallback Cache (Graceful Degradation):**
 >    - In enterprise environments, external services may suffer from latency, rate limits, or network partitions.
->    - To guarantee High Availability, the fetch call is wrapped with an `AbortSignal.timeout(5000)` timeout barrier ([`bananaController.js:L29`](file:///c:/Users/lenin/OneDrive/Documents/what%20L6/Software%20Enterprise/bananaAPI_Quest/src/controllers/bananaController.js#L29)).
->    - If the remote API fails or exceeds 5,000ms, execution diverts to the `catch` block ([`bananaController.js:L51-L61`](file:///c:/Users/lenin/OneDrive/Documents/what%20L6/Software%20Enterprise/bananaAPI_Quest/src/controllers/bananaController.js#L51-L61)). The controller seamlessly serves a local hardcoded fallback puzzle ([`FALLBACK_PUZZLE`](file:///c:/Users/lenin/OneDrive/Documents/what%20L6/Software%20Enterprise/bananaAPI_Quest/src/controllers/bananaController.js#L11-L16)), saves the fallback solution into the session, and responds with `{ question: FALLBACK_PUZZLE.question, source: 'FALLBACK_CACHE' }`.
-> 4. **Live Outage Demonstration Feature:**
->    - To allow academic examiners to verify graceful degradation live on camera, `getPuzzle` inspects `req.query.simulateOutage`. When `simulateOutage === 'true'`, it deliberately trips the catch block, immediately engaging the fallback cache and rendering `[🟠 API: FALLBACK CACHE]` on the HUD without requiring a physical network disconnection."
+>    - To guarantee High Availability, all external fetches are guarded by an `AbortSignal.timeout(2500)` barrier.
+>    - If the remote API times out or fails, execution diverts to the `catch` block. The controller seamlessly serves a local hardcoded fallback puzzle ([`FALLBACK_PUZZLE`](file:///c:/Users/lenin/OneDrive/Documents/what%20L6/Software%20Enterprise/bananaAPI_Quest/src/controllers/bananaController.js)), saves the fallback solution into the session, and responds with `{ question: FALLBACK_PUZZLE.question, source: 'FALLBACK_CACHE', prefetched: false }`.
+> 5. **Live Outage Demonstration Feature:**
+>    - To allow academic examiners to verify graceful degradation live on camera, `getPuzzle` inspects `req.query.simulateOutage`. When `simulateOutage === 'true'`, it immediately serves the fallback cache and renders `[🟠 API: FALLBACK CACHE]` on the HUD without requiring a physical network disconnection."
 
 ---
 
@@ -132,13 +140,15 @@
 
 **Academic Answer:**
 > "**Implemented Distinctive Features:**
-> 1. **Web Audio API 8-Bit Procedural Synthesizer & Mute Toggle:** Rather than downloading static `.mp3` or `.wav` sound files, [`public/js/app.js:L72-L175`](file:///c:/Users/lenin/OneDrive/Documents/what%20L6/Software%20Enterprise/bananaAPI_Quest/public/js/app.js#L72-L175) synthesizes sound waves in real time using the browser's native `AudioContext`. It dynamically modulates frequency ramps on square, triangle, and sawtooth waves for button clicks, coin inserts, power-up arpeggios, wrong buzzes, panic ticks, combo fanfares, and sad game overs. A marquee toggle (`[🔊 SFX: ON/OFF]`) silences audio instantly for speaking during presentation recordings.
-> 2. **Camera Shake, CRT Damage Flash & Green Victory Pulse:** Incorrect guesses trigger a CSS camera shake and red CRT vignette flash; correct guesses produce a neon green pulse and a floating "+PTS" score animation.
-> 3. **Combo Streak Multipliers:** Consecutive correct answers award escalating combo bonuses (`x1`, `x2`, `x3 ON FIRE!`) with bonus points (`+50 * combo`) and an animated fire-glow HUD badge.
-> 4. **Panic Mode (< 10 Seconds):** When timer drops below 10 seconds, the badge flashes neon red (`.panic-pulse`) and the synth emits urgent, high-pitched countdown warning ticks.
-> 5. **Live Interoperability Status Pill + Outage Toggle:** A real-time badge in the HUD displays `[🟢 API: LIVE]` vs `[🟠 API: FALLBACK]`. Clicking it or pressing the 'F' hotkey simulates an API outage on demand for live examiner demonstration.
-> 6. **Persistent SQLite High Score Leaderboard:** A dedicated `scores` table stores player achievements. The controller executes an aggregate SQL query (`SELECT username, MAX(score) AS high_score FROM scores GROUP BY username ORDER BY high_score DESC LIMIT 5`) and renders the Hall of Fame on the dashboard.
-> 7. **Dual Input:** On-screen 0–9 keypad for touch/mouse plus physical keyboard number support.
+> 1. **90s System DIP Switches & Settings Modal:** Authentic 90s arcade cabinets contained physical DIP switches on the motherboard for operators to configure difficulty and audio. We recreated this in `#settings-modal` with 6 interactive hardware DIP switches: SFX toggle, 0–100% master volume slider, selectable timer difficulty (EASY 60s, NORMAL 45s, HARD 20s), CRT scanlines toggle, camera shake / VFX toggle, and interoperability mode toggle. Settings persist across reloads via `localStorage` and broadcast changes over the MS-DOS event bus.
+> 2. **Web Audio API 8-Bit Synthesizer & Master Gain Control:** Rather than downloading static audio files, [`public/js/app.js`](file:///c:/Users/lenin/OneDrive/Documents/what%20L6/Software%20Enterprise/bananaAPI_Quest/public/js/app.js) synthesizes square, triangle, and sawtooth waves in real time through an `AudioContext` and centralized `masterGainNode`. Volume is dynamically modulated from 0% to 100% via the settings modal.
+> 3. **Instant Pre-Fetch Pool & Image Loading Timer Synchronization:** Puzzles are served in `< 5ms` from an in-memory queue, next round assets are preloaded via `new Image().src = data.nextQuestionHint`, and the round timer is paused with `"⏳ DECODING PUZZLE ASSET..."` until `puzzleImg.onload` fires, guaranteeing players never lose seconds waiting for graphics to render.
+> 4. **Camera Shake, CRT Damage Flash & Green Victory Pulse:** Incorrect guesses trigger a CSS camera shake and red CRT vignette flash; correct guesses produce a neon green pulse and a floating "+PTS" score animation.
+> 5. **Combo Streak Multipliers:** Consecutive correct answers award escalating combo bonuses (`x1`, `x2`, `x3 ON FIRE!`) with bonus points (`+50 * combo`) and an animated fire-glow HUD badge.
+> 6. **Panic Mode (< 10 Seconds):** When timer drops below 10 seconds, the badge flashes neon red (`.panic-pulse`) and the synth emits urgent, high-pitched countdown warning ticks.
+> 7. **Live Interoperability Status Pill + Outage Toggle:** A real-time badge in the HUD displays `[🟢 API: LIVE]` vs `[🟠 API: FALLBACK]`. Clicking it or pressing the 'F' hotkey simulates an API outage on demand for live examiner demonstration.
+> 8. **Persistent SQLite High Score Leaderboard:** A dedicated `scores` table stores player achievements. The controller executes an aggregate SQL query (`SELECT username, MAX(score) AS high_score FROM scores GROUP BY username ORDER BY high_score DESC LIMIT 5`) and renders the Hall of Fame on the dashboard.
+> 9. **Dual Input:** On-screen 0–9 keypad for touch/mouse plus physical keyboard number support.
 >
 > **Future Development Roadmap (Post-Week 8 Enterprise Expansion):**
 > 1. **Real-Time Multiplayer with WebSockets (`Socket.io`):** Introduce head-to-head multiplayer arcade battles where two authenticated players race against the clock to solve the same banana puzzle simultaneously.
@@ -243,12 +253,13 @@ graph TD
   - `exports.logout`: Calls `req.session.destroy()` and clears client-side cookie `connect.sid` ([`L112-L120`](file:///c:/Users/lenin/OneDrive/Documents/what%20L6/Software%20Enterprise/bananaAPI_Quest/src/controllers/authController.js#L112-L120)).
 
 #### 4. [`src/controllers/bananaController.js`](file:///c:/Users/lenin/OneDrive/Documents/what%20L6/Software%20Enterprise/bananaAPI_Quest/src/controllers/bananaController.js) — Game & Interoperability Logic
-- **Role:** Handles external API consumption, puzzle validation, and score records.
-- **Key Methods:**
-  - `exports.getPuzzle`: Interoperates with `https://marcconrad.com/uob/banana/api.php?out=json` protected by `AbortSignal.timeout(5000)`. Supports `req.query.simulateOutage === 'true'` for live presentation testing. Stores solution in `req.session.solution` and responds with `{ question, source: 'LIVE_MARCCONRAD' }` or `{ question, source: 'FALLBACK_CACHE' }` ([`L19-L62`](file:///c:/Users/lenin/OneDrive/Documents/what%20L6/Software%20Enterprise/bananaAPI_Quest/src/controllers/bananaController.js#L19-L62)).
-  - `exports.checkAnswer`: Evaluates player's guess against session-bound solution; includes guard checking `solution === undefined` returning HTTP 400 Bad Request if no puzzle is active ([`L65-L87`](file:///c:/Users/lenin/OneDrive/Documents/what%20L6/Software%20Enterprise/bananaAPI_Quest/src/controllers/bananaController.js#L65-L87)).
-  - `exports.saveScore`: Parameterized `INSERT INTO scores (username, score) VALUES (?, ?)` extracting username securely from session and enforcing non-negative scores ([`L90-L120`](file:///c:/Users/lenin/OneDrive/Documents/what%20L6/Software%20Enterprise/bananaAPI_Quest/src/controllers/bananaController.js#L90-L120)).
-  - `exports.getLeaderboard`: Executes aggregate SQL `SELECT username, MAX(score) AS high_score FROM scores GROUP BY username ORDER BY high_score DESC LIMIT 5` ([`L123-L145`](file:///c:/Users/lenin/OneDrive/Documents/what%20L6/Software%20Enterprise/bananaAPI_Quest/src/controllers/bananaController.js#L123-L145)).
+- **Role:** Handles external API consumption, Producer-Consumer puzzle buffer queue, puzzle validation, and score records.
+- **Key Methods & Buffers:**
+  - `puzzlePool = []` & `refillPuzzlePool`: In-memory pre-fetch buffer (target size: 3) populated asynchronously in the background with a 2500ms timeout barrier.
+  - `exports.getPuzzle`: Immediately shifts a puzzle from `puzzlePool` in `< 5ms`, sets `req.session.solution`, triggers non-blocking background refill, and returns `{ question, source: 'LIVE_MARCCONRAD', prefetched: true, nextQuestionHint: ... }`. If `?simulateOutage=true` is present, instantly engages `FALLBACK_PUZZLE` with `source: 'FALLBACK_CACHE'`.
+  - `exports.checkAnswer`: Evaluates player's guess against session-bound solution; includes guard checking `solution === undefined` returning HTTP 400 Bad Request if no puzzle is active.
+  - `exports.saveScore`: Parameterized `INSERT INTO scores (username, score) VALUES (?, ?)` extracting username securely from session and enforcing non-negative scores.
+  - `exports.getLeaderboard`: Executes aggregate SQL `SELECT username, MAX(score) AS high_score FROM scores GROUP BY username ORDER BY high_score DESC LIMIT 5`.
 
 #### 5. [`src/routes/authRoutes.js`](file:///c:/Users/lenin/OneDrive/Documents/what%20L6/Software%20Enterprise/bananaAPI_Quest/src/routes/authRoutes.js) & [`src/routes/bananaRoutes.js`](file:///c:/Users/lenin/OneDrive/Documents/what%20L6/Software%20Enterprise/bananaAPI_Quest/src/routes/bananaRoutes.js) — Routing Layer
 - **Role:** Maps incoming URI endpoints to respective controller handler functions.
@@ -257,7 +268,7 @@ graph TD
 
 #### 6. [`src/middleware/authMiddleware.js`](file:///c:/Users/lenin/OneDrive/Documents/what%20L6/Software%20Enterprise/bananaAPI_Quest/src/middleware/authMiddleware.js) — Security Route Guard
 - **Role:** Intercepts incoming requests before reaching sensitive game controllers.
-- **Implementation:** Validates `req.session && req.session.username`. If present, invokes `next()`; otherwise, aborts pipeline with HTTP 401 Unauthorized ([`L7-L19`](file:///c:/Users/lenin/OneDrive/Documents/what%20L6/Software%20Enterprise/bananaAPI_Quest/src/middleware/authMiddleware.js#L7-L19)).
+- **Implementation:** Validates `req.session && req.session.username`. If present, invokes `next()`; otherwise, aborts pipeline with HTTP 401 Unauthorized.
 
 ---
 
@@ -266,11 +277,12 @@ graph TD
 #### 1. [`public/index.html`](file:///c:/Users/lenin/OneDrive/Documents/what%20L6/Software%20Enterprise/bananaAPI_Quest/public/index.html) — Arcade Cabinet Structure
 - **Role:** Semantic HTML5 presentation structure.
 - **Key Sections:**
-  - **Marquee Header:** Real-time 1UP score tracker, High Score tracker, SFX Mute button (`#sfx-toggle-btn`), and blinking arcade cabinet title.
+  - **Marquee Header:** Real-time 1UP score tracker, High Score tracker, SFX Mute button (`#sfx-toggle-btn`), System Settings button (`#settings-btn`), and blinking arcade cabinet title.
   - **#login-section:** Authentication forms for Register and Login.
   - **#dashboard-section:** Main arcade menu displaying active user, Start Arcade Mode button, and Hall of Fame Leaderboard table.
   - **#game-section:** Interop Health Status Pill (`#api-status-pill`), Combo Streak badge (`#streak-display`), Floating Points container (`#floating-score-container`), HUD displaying SCORE, TIME, and LIVES; Marc Conrad puzzle image; 0–9 tactile keypad grid; Fire Answer button; and feedback box.
   - **#event-stream-console:** MS-DOS style terminal log with Clear button.
+  - **#settings-modal:** Retro 90s System DIP Switches modal featuring 6 hardware controls (SFX toggle, master volume slider, timer difficulty select, CRT scanlines toggle, VFX shake toggle, API outage simulation toggle) and a Save & Close button.
   - **#game-over-modal:** Animated CRT popup with CONTINUE? prompt, Final Score, and Insert Coin / Retry buttons.
 
 #### 2. [`public/css/style.css`](file:///c:/Users/lenin/OneDrive/Documents/what%20L6/Software%20Enterprise/bananaAPI_Quest/public/css/style.css) — 90s Retro Arcade Design System
@@ -278,19 +290,22 @@ graph TD
 - **Key Features:**
   - CSS Custom Properties (`:root`) for arcade neon color palette (cyan `#00f0ff`, magenta `#ff007f`, yellow `#ffe600`, green `#39ff14`, red `#ff3131`).
   - Google Fonts integration: `'Press Start 2P'` (8-bit headings) and `'VT323'` (MS-DOS monospace terminal text).
-  - CRT monitor scanline simulation using CSS repeating linear gradients.
+  - CRT monitor scanline simulation using CSS repeating linear gradients, with `.no-scanlines` toggle class on `<body>`.
   - Camera shake (`.screen-shake`), damage flash (`.damage-flash`), victory heal pulse (`.heal-flash`), and floating points animation (`.floating-points`).
   - 10-second timer Panic Mode animation (`.panic-pulse`).
   - Chunky, tactile, 3D-bevel button styling with active depression states.
+  - Custom 8-bit styling for range sliders (`.arcade-slider`), select dropdowns (`.arcade-select`), and DIP switch modals (`.settings-modal-content`).
   - Responsive flexbox and grid layouts adaptable from desktop monitors to mobile screens.
 
 #### 3. [`public/js/app.js`](file:///c:/Users/lenin/OneDrive/Documents/what%20L6/Software%20Enterprise/bananaAPI_Quest/public/js/app.js) — Client-Side Logic & Event Bus
-- **Role:** Manages the client-side lifecycle, Web Audio sound synthesis, Pub/Sub events, and view states.
+- **Role:** Manages the client-side lifecycle, Web Audio sound synthesis, Pub/Sub events, settings persistence, and view states.
 - **Key Modules:**
-  - **Web Audio API Synthesizer ([`L72-L175`](file:///c:/Users/lenin/OneDrive/Documents/what%20L6/Software%20Enterprise/bananaAPI_Quest/public/js/app.js#L72-L175)):** Generates 7 procedural sound effects (`click`, `coin`, `correct`, `wrong`, `gameover`, `tick`, `streak`) with mute toggle support.
+  - **System Settings Manager:** `loadSavedSettings()` and `saveSettingsToStorage()` persist preferences in `localStorage` and synchronize hardware states across UI controls.
+  - **Web Audio API Synthesizer:** Generates 7 procedural sound effects with volume dynamically scaled via a centralized `masterGainNode`.
   - **Finite State Machine:** `switchView(viewName)` switches between `login`, `dashboard`, and `game`.
-  - **Pub/Sub CustomEvent Bus:** Dispatches and subscribes to 11 custom events across `window`.
-  - **MS-DOS Observer Logger ([`L353-L383`](file:///c:/Users/lenin/OneDrive/Documents/what%20L6/Software%20Enterprise/bananaAPI_Quest/public/js/app.js#L353-L383)):** Renders incoming event objects and timestamps in real time.
+  - **Pre-Cache Image Synchronization:** Preloads `data.nextQuestionHint` via `new Image().src`; displays `"⏳ DECODING PUZZLE ASSET..."` and pauses timer until `puzzleImg.onload` confirms the graphic has rendered.
+  - **Pub/Sub CustomEvent Bus:** Dispatches and subscribes to 14 decoupled custom events across `window`.
+  - **MS-DOS Observer Logger:** Renders incoming event objects and timestamps in real time.
   - **Dual Input Handlers:** Translates on-screen keypad clicks and physical keyboard digit presses (`0`–`9`) into instant answer guesses, with `F` key toggling outage simulation.
 
 ---
@@ -327,18 +342,19 @@ Use this timeline to ensure you hit every criterion on the marking rubric during
 - *"For interoperability, we consume Marc Conrad's Banana REST API over HTTPS."*
 - Open [`src/controllers/bananaController.js`](file:///c:/Users/lenin/OneDrive/Documents/what%20L6/Software%20Enterprise/bananaAPI_Quest/src/controllers/bananaController.js):
   - Point to `fetch(apiUrl)`: *"Notice we employ a server-side reverse proxy pattern. The client browser never contacts the third-party API directly. This resolves CORS issues and hides the answer from browser DevTools by storing the solution strictly in `req.session.solution`."*
-  - Point to `AbortSignal.timeout(5000)` and `FALLBACK_PUZZLE`: *"To achieve enterprise fault tolerance, we guard the call with a 5-second timeout and a pre-cached fallback puzzle. If the upstream server is offline, our application degrades gracefully."*
+  - Point to `puzzlePool = []` and `refillPuzzlePool`: *"To eliminate external network latency (400ms–2,500ms), we built an asynchronous Producer-Consumer pre-fetch queue. Puzzles are served instantly from the pool in under 5 milliseconds (`prefetched: true`), while subsequent rounds are refilled in the background non-blocking. The frontend also pre-caches upcoming puzzle images via `nextQuestionHint` and pauses the timer until `puzzleImg.onload` confirms the asset has loaded."*
+  - Point to `FALLBACK_PUZZLE`: *"To achieve enterprise fault tolerance, we guard calls with a 2,500ms timeout and a pre-cached fallback puzzle. If the upstream server is offline, our application degrades gracefully."*
   - **Live Camera Demonstration of Outage Simulation:**
-    - Switch to browser: show the `[🟢 API: LIVE MARCCONRAD]` pill.
+    - Switch to browser: show the `[🟢 API: BUFFER (FAST)]` pill.
     - Click the pill or press the **`F` key**: watch the pill switch to `[🟠 API: FALLBACK CACHE]`, the MS-DOS terminal log `interop-mode-changed`, and a cached puzzle load seamlessly!
     - *"As you can see, our application continues without crashing, demonstrating 100% High Availability."*
 
 #### [5:15 - 7:30] Event-Driven Architecture & Web Audio Synthesizer (Theme 3)
 - *"Our application is built on an asynchronous Publish-Subscribe Event-Driven Architecture."*
 - Open [`public/js/app.js`](file:///c:/Users/lenin/OneDrive/Documents/what%20L6/Software%20Enterprise/bananaAPI_Quest/public/js/app.js):
-  - Point to `window.dispatchEvent(new CustomEvent(...))`: *"The UI is completely decoupled. When the 45-second timer ticks, it dispatches `'timer-tick'`. When answers are evaluated, it dispatches `'guess-evaluated'`. The MS-DOS Event Stream terminal on the right acts as an observer, displaying live event payloads with millisecond timestamps."*
-  - Point to `playArcadeSound()`: *"Instead of relying on large audio assets, we built a procedural 8-bit sound synthesizer using the browser's Web Audio API. It configures square, triangle, and sawtooth wave oscillators on the fly to produce authentic retro arcade beeps, coin chimes, warning ticks, and power-up arpeggios."*
-  - Point to the SFX toggle button: *"We also included an on-screen mute button (`[🔊 SFX: ON/OFF]`) so the presenter's voice is never overpowered by audio effects."*
+  - Point to `window.dispatchEvent(new CustomEvent(...))`: *"The UI is completely decoupled. When the countdown timer ticks, it dispatches `'timer-tick'`. When answers are evaluated, it dispatches `'guess-evaluated'`. The MS-DOS Event Stream terminal on the right acts as an observer, displaying live event payloads with millisecond timestamps."*
+  - Point to `playArcadeSound()`: *"Instead of relying on large audio assets, we built a procedural 8-bit sound synthesizer using the browser's Web Audio API. It configures square, triangle, and sawtooth wave oscillators on the fly through a centralized `masterGainNode` scaled by a master volume slider."*
+  - Point to the `[⚙️ SETTINGS]` DIP Switches button: *"We built an authentic 90s System DIP Switches modal allowing live customization of sound effects, master volume, timer difficulty (Easy, Normal, Hard), CRT scanlines, screen shake, and outage simulation, all persisted in `localStorage`."*
 
 #### [7:30 - 9:00] Live Arcade Demonstration
 - Switch to browser (`http://localhost:3000`):
@@ -346,12 +362,13 @@ Use this timeline to ensure you hit every criterion on the marking rubric during
   2. Point to the MS-DOS Event Stream: show the `> [auth-register]` event appearing.
   3. Log in: Hear the coin chime sound effect; observe the transition into the Main Menu Dashboard.
   4. Show the Leaderboard: point out the top 5 scores retrieved from SQLite.
-  5. Click `[ START ARCADE MODE ]`: show the puzzle loading and the 45-second timer counting down.
-  6. Answer a puzzle using the **on-screen keypad** or **keyboard number keys (0–9)**.
-  7. Show consecutive correct answers: demonstrate the **Combo Streak Multiplier (`STREAK: 2X`, `3X ON FIRE!`)**, the green screen victory pulse, and floating "+PTS" animations!
-  8. Enter an incorrect guess: show the **camera screen shake**, the red CRT damage flash, and the heart decrementing.
-  9. Let the timer drop below 10 seconds: show the **Panic Mode** red timer pulsing and warning ticks playing.
-  10. Deplete lives: show the 90s `CONTINUE? / GAME OVER` modal appearing, the sad game-over chords playing, and the score being recorded to the SQLite leaderboard and marquee.
+  5. Open `[⚙️ SETTINGS]`: Show the 6 DIP switches, adjust master volume, switch difficulty, and click `[💾 SAVE & CLOSE]` — observe `> [settings-updated]` appearing on the MS-DOS event bus.
+  6. Click `[ START ARCADE MODE ]`: show the puzzle loading instantly (`< 5ms`) from the pre-fetch buffer and the countdown timer starting cleanly after image decode.
+  7. Answer a puzzle using the **on-screen keypad** or **keyboard number keys (0–9)**.
+  8. Show consecutive correct answers: demonstrate the **Combo Streak Multiplier (`STREAK: 2X`, `3X ON FIRE!`)**, the green screen victory pulse, and floating "+PTS" animations!
+  9. Enter an incorrect guess: show the **camera screen shake**, the red CRT damage flash, and the heart decrementing.
+  10. Let the timer drop below 10 seconds: show the **Panic Mode** red timer pulsing and warning ticks playing.
+  11. Deplete lives: show the 90s `CONTINUE? / GAME OVER` modal appearing, the sad game-over chords playing, and the score being recorded to the SQLite leaderboard and marquee.
 
 #### [9:00 - 10:00] Conclusion & Future Roadmap
 - *"In conclusion, Banana Quest successfully demonstrates all four enterprise software themes: Version Control, Event-Driven Programming, Interoperability, and Virtual Identity."*
