@@ -67,9 +67,15 @@ const modalScoreText = document.getElementById('modal-score-text');
 const modalRetryBtn = document.getElementById('modal-retry-btn');
 const modalMenuBtn = document.getElementById('modal-menu-btn');
 
-// Cache MS-DOS event stream console elements
+// Cache MS-DOS event stream & error dashboard elements
+const terminalTitle = document.getElementById('terminal-title');
+const tabBusBtn = document.getElementById('tab-bus-btn');
+const tabErrorsBtn = document.getElementById('tab-errors-btn');
 const eventLogContainer = document.getElementById('event-log-container');
+const errorLogContainer = document.getElementById('error-log-container');
 const clearStreamBtn = document.getElementById('clear-stream-btn');
+let currentTerminalTab = 'bus';
+let unreadErrorCount = 0;
 
 // Global timer tracking variables
 let timerInterval = null;
@@ -464,6 +470,85 @@ function updateScoreDisplay() {
 // THEME 3: MS-DOS EVENT STREAM LOGGER (OBSERVER PATTERN)
 // ====================================================
 
+// Helper function to switch between MS-DOS [BUS] and [ERRORS] tabs
+function switchTerminalTab(tab) {
+  currentTerminalTab = tab;
+  if (tab === 'errors') {
+    if (terminalTitle) terminalTitle.textContent = 'C:\\BANANA_QUEST\\ERROR_LOG.DAT';
+    if (eventLogContainer) eventLogContainer.classList.add('hidden');
+    if (errorLogContainer) errorLogContainer.classList.remove('hidden');
+    if (tabBusBtn) tabBusBtn.classList.remove('active-tab');
+    if (tabErrorsBtn) {
+      tabErrorsBtn.classList.add('active-tab');
+      tabErrorsBtn.classList.remove('tab-has-errors');
+      unreadErrorCount = 0;
+      tabErrorsBtn.textContent = '[ERRORS]';
+    }
+    if (errorLogContainer) errorLogContainer.scrollTop = errorLogContainer.scrollHeight;
+  } else {
+    if (terminalTitle) terminalTitle.textContent = 'C:\\BANANA_QUEST\\EVENT_BUS.EXE';
+    if (errorLogContainer) errorLogContainer.classList.add('hidden');
+    if (eventLogContainer) eventLogContainer.classList.remove('hidden');
+    if (tabErrorsBtn) tabErrorsBtn.classList.remove('active-tab');
+    if (tabBusBtn) tabBusBtn.classList.add('active-tab');
+    if (eventLogContainer) eventLogContainer.scrollTop = eventLogContainer.scrollHeight;
+  }
+}
+
+if (tabBusBtn) {
+  tabBusBtn.addEventListener('click', () => {
+    playArcadeSound('click');
+    switchTerminalTab('bus');
+  });
+}
+
+if (tabErrorsBtn) {
+  tabErrorsBtn.addEventListener('click', () => {
+    playArcadeSound('click');
+    switchTerminalTab('errors');
+  });
+}
+
+// Dedicated Error Logging Subsystem: Intercepts runtime faults, timeouts, wrong answers & API network drops
+function logToErrorStream(errorType, details, description = '') {
+  const timestamp = new Date().toISOString().substring(11, 23);
+  const entry = document.createElement('div');
+  entry.className = 'error-entry';
+
+  const meta = document.createElement('div');
+  meta.className = 'event-meta';
+  meta.innerHTML = `
+    <span class="error-title">&gt; [FAULT: ${errorType}]</span>
+    <span style="color: #cbd5e1;">${timestamp}</span>
+  `;
+
+  const descDiv = document.createElement('div');
+  descDiv.style.color = '#fecaca';
+  descDiv.style.fontSize = '1.05rem';
+  descDiv.style.marginBottom = '2px';
+  descDiv.textContent = description || errorType;
+
+  const payload = document.createElement('div');
+  payload.className = 'error-payload';
+  payload.textContent = typeof details === 'object' ? JSON.stringify(details) : String(details);
+
+  entry.appendChild(meta);
+  entry.appendChild(descDiv);
+  entry.appendChild(payload);
+
+  if (errorLogContainer) {
+    errorLogContainer.appendChild(entry);
+    errorLogContainer.scrollTop = errorLogContainer.scrollHeight;
+  }
+
+  // Update badge alert if user is currently looking at [BUS] tab
+  if (currentTerminalTab !== 'errors' && tabErrorsBtn) {
+    unreadErrorCount++;
+    tabErrorsBtn.textContent = `[ERRORS (${unreadErrorCount})]`;
+    tabErrorsBtn.classList.add('tab-has-errors');
+  }
+}
+
 // Helper function to log dispatched CustomEvents to the MS-DOS terminal
 function logToEventStream(eventName, details, customClass = '') {
   // Capture precise timestamp in HH:MM:SS.mmm format
@@ -491,17 +576,27 @@ function logToEventStream(eventName, details, customClass = '') {
   entry.appendChild(payload);
 
   // Append entry to MS-DOS terminal stream
-  eventLogContainer.appendChild(entry);
-
-  // Auto-scroll terminal to bottom
-  eventLogContainer.scrollTop = eventLogContainer.scrollHeight;
+  if (eventLogContainer) {
+    eventLogContainer.appendChild(entry);
+    eventLogContainer.scrollTop = eventLogContainer.scrollHeight;
+  }
 }
 
 // Clear terminal button listener
 clearStreamBtn.addEventListener('click', () => {
-  eventLogContainer.innerHTML = '';
   playArcadeSound('click');
-  logToEventStream('CLS', { message: 'MS-DOS event bus buffer cleared' });
+  if (currentTerminalTab === 'errors') {
+    if (errorLogContainer) errorLogContainer.innerHTML = '';
+    unreadErrorCount = 0;
+    if (tabErrorsBtn) {
+      tabErrorsBtn.textContent = '[ERRORS]';
+      tabErrorsBtn.classList.remove('tab-has-errors');
+    }
+    logToErrorStream('CLS', { message: 'Error log buffer cleared' }, 'C:\\BANANA_QUEST\\ERROR_LOG.DAT initialized');
+  } else {
+    if (eventLogContainer) eventLogContainer.innerHTML = '';
+    logToEventStream('CLS', { message: 'MS-DOS event bus buffer cleared' });
+  }
 });
 
 // ====================================================
@@ -575,6 +670,7 @@ window.addEventListener('timer-expired', (event) => {
   guessInput.disabled = true;
   triggerScreenShake();
   logToEventStream('timer-expired', event.detail, 'timer-expired');
+  logToErrorStream('COUNTDOWN_TIMEOUT', event.detail, 'Round timer reached 00s without a submitted solution');
   // Dispatch game-over event with final score metadata
   window.dispatchEvent(new CustomEvent('game-over', {
     detail: { reason: 'TIME_EXPIRED', finalScore: currentScore, timestamp: Date.now() }
@@ -635,6 +731,17 @@ async function loadPuzzle() {
     const response = await fetch('/api/puzzle' + query);
     const data = await response.json();
 
+    // INTERCEPT ERROR / OUTAGE: If served from fallback cache, record to Error Dashboard
+    if (data.source === 'FALLBACK_CACHE') {
+      logToErrorStream(
+        'NETWORK_OUTAGE_FALLBACK',
+        { source: 'FALLBACK_CACHE', simulateOutage, question: data.question },
+        simulateOutage
+          ? 'Manual outage simulation activated (?simulateOutage=true) - Fallback cache bank engaged'
+          : 'Live API unreachable (timeout or socket drop) - Automatically engaged 10+ Fallback Cache'
+      );
+    }
+
     // OPTIMIZATION: If backend provided a hint of the next puzzle in the queue, pre-cache the image!
     if (data.nextQuestionHint) {
       const preloadNext = new Image();
@@ -650,6 +757,11 @@ async function loadPuzzle() {
       }
     }));
   } catch (error) {
+    logToErrorStream(
+      'API_CONNECTION_FAILURE',
+      { error: error.message || String(error), simulateOutage },
+      'Network fetch failed to reach backend /api/puzzle endpoint'
+    );
     messageBox.style.color = 'var(--arcade-red)';
     messageBox.textContent = 'ERROR LOADING PUZZLE';
   } finally {
@@ -760,11 +872,35 @@ window.addEventListener('guess-evaluated', (event) => {
     lives--;
     updateLivesDisplay();
 
+    // INTERCEPT ERROR: Log wrong guess to Error Dashboard
+    logToErrorStream(
+      'INCORRECT_GUESS',
+      event.detail,
+      `Incorrect solution: "${event.detail.guess !== undefined ? event.detail.guess : guessInput.value}". 1 Life deducted (${lives} lives remaining)`
+    );
+
     if (lives > 0) {
+      // 3-SECOND AUTOMATIC PROGRESSION ON ERROR:
+      // Halt round countdown timer and clear panic pulse
+      clearInterval(timerInterval);
+      timerDisplay.classList.remove('panic-pulse');
+
+      // Disable inputs during 3-second transition delay to prevent spamming
+      submitGuessBtn.disabled = true;
+      guessInput.disabled = true;
+
       messageBox.style.color = 'var(--arcade-red)';
-      messageBox.textContent = `✖ ${event.detail.message} TRY AGAIN! (${lives} LIVES LEFT)`;
-      guessInput.value = '';
-      guessInput.focus();
+      messageBox.textContent = `✖ ${event.detail.message} (${lives} LIVES LEFT) - AUTO-RECOVERING IN 3S...`;
+
+      // Clear any pending timeout and auto-advance after 3 seconds
+      if (autoAdvanceTimeout) {
+        clearTimeout(autoAdvanceTimeout);
+        autoAdvanceTimeout = null;
+      }
+      autoAdvanceTimeout = setTimeout(() => {
+        loadPuzzle();
+      }, 3000);
+
     } else {
       // BRANCH C: Game Over - Lives depleted to zero
       if (autoAdvanceTimeout) {
@@ -804,6 +940,11 @@ window.addEventListener('game-over', async (event) => {
   currentStreak = 0;
   updateStreakDisplay();
   logToEventStream('game-over', event.detail, 'timer-expired');
+  logToErrorStream(
+    'GAME_OVER',
+    event.detail,
+    `Game Over state triggered (${event.detail.reason || 'OUT_OF_LIVES'}) - Final Score: ${event.detail.finalScore !== undefined ? event.detail.finalScore : currentScore} PTS`
+  );
 
   // Asynchronously record final score in SQLite database via POST /api/score
   try {
@@ -1230,6 +1371,11 @@ submitGuessBtn.addEventListener('click', async () => {
     }));
   } catch (err) {
     console.error('Answer check error:', err);
+    logToErrorStream(
+      'CHECK_ANSWER_NETWORK_ERROR',
+      { error: err.message || String(err), guess },
+      'Failed to submit answer to /api/check-answer'
+    );
     submitGuessBtn.disabled = false;
     guessInput.disabled = false;
   } finally {

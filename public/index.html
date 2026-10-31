@@ -187,13 +187,17 @@
     <!-- ==================================================== -->
     <aside id="event-stream-console">
 
-      <!-- MS-DOS Title Bar -->
+      <!-- MS-DOS Title Bar with [BUS] & [ERRORS] Tabs -->
       <div class="terminal-header">
-        <span class="terminal-title">C:\BANANA_QUEST\EVENT_BUS.EXE</span>
-        <button id="clear-stream-btn" class="clear-btn">[CLS]</button>
+        <span id="terminal-title" class="terminal-title">C:\BANANA_QUEST\EVENT_BUS.EXE</span>
+        <div class="terminal-controls">
+          <button id="tab-bus-btn" class="terminal-tab-btn active-tab" type="button" title="View Event Bus Stream">[BUS]</button>
+          <button id="tab-errors-btn" class="terminal-tab-btn" type="button" title="View Error Dashboard Console">[ERRORS]</button>
+          <button id="clear-stream-btn" class="clear-btn" type="button" title="Clear Active Log Buffer">[CLS]</button>
+        </div>
       </div>
 
-      <!-- Real-time Event Log Body -->
+      <!-- Real-time Event Log Body (Event Bus Tab) -->
       <div id="event-log-container" class="terminal-body">
         <div class="event-entry">
           <div class="event-meta">
@@ -201,6 +205,17 @@
             <span>READY</span>
           </div>
           <div class="event-payload">&gt; Listening on window CustomEvent bus...</div>
+        </div>
+      </div>
+
+      <!-- Dedicated Error Dashboard Console Body (Error Tab) -->
+      <div id="error-log-container" class="terminal-body error-terminal-body hidden">
+        <div class="error-entry">
+          <div class="event-meta">
+            <span style="color: var(--arcade-red); font-weight: bold;">C:\BANANA_QUEST\ERROR_LOG.DAT</span>
+            <span>READY</span>
+          </div>
+          <div class="event-payload" style="color: #ff9999;">&gt; Intercepting runtime faults, timeouts, wrong answers &amp; API network drops...</div>
         </div>
       </div>
 
