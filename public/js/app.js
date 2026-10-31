@@ -42,6 +42,12 @@ const backToDashBtn = document.getElementById('back-to-dash-btn');
 const logoutBtn = document.getElementById('logout-btn');
 const keypadButtons = document.querySelectorAll('.keypad-btn');
 
+// Cache Game Juice & Presentation Elements
+const sfxToggleBtn = document.getElementById('sfx-toggle-btn');
+const apiStatusPill = document.getElementById('api-status-pill');
+const streakDisplay = document.getElementById('streak-display');
+const floatingScoreContainer = document.getElementById('floating-score-container');
+
 // Cache Game Over Modal elements
 const gameOverModal = document.getElementById('game-over-modal');
 const modalScoreText = document.getElementById('modal-score-text');
@@ -60,6 +66,11 @@ let timeLeft = 45;
 let lives = 3;
 let currentScore = 0;
 
+// Game Juice & Polish State
+let isMuted = false;
+let simulateOutage = false;
+let currentStreak = 0;
+
 // AudioContext instance for real-time 8-bit sound synthesis
 let audioCtx = null;
 
@@ -69,6 +80,9 @@ let audioCtx = null;
 
 // Function to synthesize vintage 8-bit arcade beeps without external sound files
 function playArcadeSound(type) {
+  // If player toggled SFX mute, silence synthesizer immediately
+  if (isMuted) return;
+
   try {
     // Lazily initialize browser AudioContext on first user interaction
     if (!audioCtx) {
@@ -164,8 +178,89 @@ function playArcadeSound(type) {
         osc.stop(now + (idx + 1) * 0.14);
       });
     }
+
+    // TYPE 6: PANIC TICK (< 10s Timer Warning Beep)
+    else if (type === 'tick') {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(1200, now);
+      gain.gain.setValueAtTime(0.06, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start(now);
+      osc.stop(now + 0.04);
+    }
+
+    // TYPE 7: COMBO STREAK FANFARE (High ascending celebratory chime)
+    else if (type === 'streak') {
+      const streakPitches = [784, 988, 1175, 1568]; // G5, B5, D6, G6
+      streakPitches.forEach((freq, idx) => {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(freq, now + idx * 0.05);
+        gain.gain.setValueAtTime(0.12, now + idx * 0.05);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + (idx + 1) * 0.05);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(now + idx * 0.05);
+        osc.stop(now + (idx + 1) * 0.05);
+      });
+    }
   } catch (e) {
     // Gracefully ignore audio errors if browser blocks sound
+  }
+}
+
+// ====================================================
+// GAME JUICE: VISUAL FEEDBACK & POPUP ANIMATIONS
+// ====================================================
+
+// Helper function to trigger violent camera shake and red damage flash
+function triggerScreenShake() {
+  if (!gameSection) return;
+  gameSection.classList.remove('screen-shake', 'damage-flash');
+  void gameSection.offsetWidth; // Force DOM reflow to re-trigger CSS animation
+  gameSection.classList.add('screen-shake', 'damage-flash');
+  setTimeout(() => {
+    gameSection.classList.remove('screen-shake', 'damage-flash');
+  }, 400);
+}
+
+// Helper function to trigger green CRT victory pulse
+function triggerScreenHeal() {
+  if (!gameSection) return;
+  gameSection.classList.remove('heal-flash');
+  void gameSection.offsetWidth; // Force DOM reflow
+  gameSection.classList.add('heal-flash');
+  setTimeout(() => {
+    gameSection.classList.remove('heal-flash');
+  }, 450);
+}
+
+// Helper function to render floating "+PTS" popup animation over the cabinet
+function showFloatingPoints(text) {
+  if (!floatingScoreContainer) return;
+  const popup = document.createElement('div');
+  popup.className = 'floating-points';
+  popup.textContent = text;
+  floatingScoreContainer.appendChild(popup);
+  setTimeout(() => {
+    if (popup.parentNode) popup.parentNode.removeChild(popup);
+  }, 1400);
+}
+
+// Helper function to update the streak badge in the arcade HUD
+function updateStreakDisplay() {
+  if (!streakDisplay) return;
+  streakDisplay.textContent = `STREAK: ${currentStreak}X`;
+  streakDisplay.classList.remove('streak-active', 'streak-fire');
+  if (currentStreak >= 3) {
+    streakDisplay.classList.add('streak-fire');
+  } else if (currentStreak >= 1) {
+    streakDisplay.classList.add('streak-active');
   }
 }
 
@@ -335,6 +430,15 @@ function startTimer() {
 window.addEventListener('timer-tick', (event) => {
   // Update visual timer badge in DOM
   timerDisplay.textContent = `TIME: ${event.detail.seconds}s`;
+
+  // THEME 3: PANIC MODE (< 10s Timer Warning Beeps & Pulse)
+  if (event.detail.seconds <= 10 && event.detail.seconds > 0) {
+    timerDisplay.classList.add('panic-pulse');
+    playArcadeSound('tick');
+  } else {
+    timerDisplay.classList.remove('panic-pulse');
+  }
+
   // Log real-time event to MS-DOS console
   logToEventStream('timer-tick', event.detail, 'timer-tick');
 });
@@ -342,10 +446,14 @@ window.addEventListener('timer-tick', (event) => {
 // SUBSCRIBER 2: Listen for custom 'timer-expired' event
 window.addEventListener('timer-expired', (event) => {
   timerDisplay.textContent = 'TIME EXPIRED!';
+  timerDisplay.classList.remove('panic-pulse');
   lives = 0;
   updateLivesDisplay();
+  currentStreak = 0;
+  updateStreakDisplay();
   submitGuessBtn.disabled = true;
   guessInput.disabled = true;
+  triggerScreenShake();
   logToEventStream('timer-expired', event.detail, 'timer-expired');
   // Dispatch game-over event with final score metadata
   window.dispatchEvent(new CustomEvent('game-over', {
@@ -377,6 +485,9 @@ window.addEventListener('auth-logout', (event) => {
   puzzleImg.classList.add('hidden');
   guessContainer.classList.add('hidden');
   messageBox.textContent = '';
+  currentStreak = 0;
+  updateStreakDisplay();
+  timerDisplay.classList.remove('panic-pulse');
   logToEventStream('auth-logout', event.detail);
 });
 
@@ -384,18 +495,19 @@ window.addEventListener('auth-logout', (event) => {
 // THEME 2 & 3: GAMEPLAY LOOP & ARCADE SUBSCRIBERS
 // ====================================================
 
-// Helper function to request puzzle from backend proxy
+// Helper function to request puzzle from backend proxy (supports simulated outages)
 async function loadPuzzle() {
   messageBox.style.color = 'var(--arcade-cyan)';
-  messageBox.textContent = 'FETCHING PUZZLE FROM MARC CONRAD API...';
+  messageBox.textContent = simulateOutage ? 'SIMULATING OUTAGE: ENGAGING FALLBACK CACHE...' : 'FETCHING PUZZLE FROM MARC CONRAD API...';
 
   try {
-    const response = await fetch('/api/puzzle');
+    const query = simulateOutage ? '?simulateOutage=true' : '';
+    const response = await fetch('/api/puzzle' + query);
     const data = await response.json();
 
-    // PUBLISHER: Dispatch custom 'puzzle-loaded' event with received image URL
+    // PUBLISHER: Dispatch custom 'puzzle-loaded' event with received image URL and source provenance
     window.dispatchEvent(new CustomEvent('puzzle-loaded', {
-      detail: { imageUrl: data.question }
+      detail: { imageUrl: data.question, source: data.source || 'LIVE_MARCCONRAD' }
     }));
   } catch (error) {
     messageBox.style.color = 'var(--arcade-red)';
@@ -413,7 +525,19 @@ window.addEventListener('puzzle-loaded', (event) => {
   guessInput.value = '';
   messageBox.textContent = '';
   guessInput.focus();
-  logToEventStream('puzzle-loaded', { imageUrl: event.detail.imageUrl });
+
+  // Update Interoperability Health Status Pill in HUD
+  if (apiStatusPill) {
+    if (event.detail.source === 'FALLBACK_CACHE') {
+      apiStatusPill.className = 'api-status-pill api-fallback';
+      apiStatusPill.textContent = '[🟠 API: FALLBACK CACHE]';
+    } else {
+      apiStatusPill.className = 'api-status-pill api-live';
+      apiStatusPill.textContent = '[🟢 API: LIVE MARCCONRAD]';
+    }
+  }
+
+  logToEventStream('puzzle-loaded', { imageUrl: event.detail.imageUrl, source: event.detail.source });
   startTimer();
 });
 
@@ -421,28 +545,54 @@ window.addEventListener('puzzle-loaded', (event) => {
 window.addEventListener('guess-evaluated', (event) => {
   logToEventStream('guess-evaluated', event.detail);
 
-  // BRANCH A: Correct Answer - Play power-up chime, award score + time bonus, auto-load next puzzle
+  // BRANCH A: Correct Answer - Play power-up chime, award score + time bonus + combo bonus
   if (event.detail.correct) {
     clearInterval(timerInterval);
+    timerDisplay.classList.remove('panic-pulse');
     playArcadeSound('correct');
 
-    // Score calculation: 100 base points plus 2x remaining seconds bonus
-    const pointsEarned = 100 + (timeLeft * 2);
+    // Combo Streak Multiplier Calculation
+    currentStreak++;
+    updateStreakDisplay();
+    const streakBonus = currentStreak > 1 ? (currentStreak - 1) * 50 : 0;
+    const pointsEarned = 100 + (timeLeft * 2) + streakBonus;
     currentScore += pointsEarned;
     updateScoreDisplay();
+
+    // Game Juice: Screen victory pulse & floating "+PTS" popup
+    triggerScreenHeal();
+    const bonusText = currentStreak > 1 ? `+${pointsEarned} PTS (${currentStreak}X COMBO!)` : `+${pointsEarned} PTS!`;
+    showFloatingPoints(bonusText);
+
+    if (currentStreak >= 2) {
+      playArcadeSound('streak');
+    }
+
+    // Publish streak-updated CustomEvent
+    window.dispatchEvent(new CustomEvent('streak-updated', {
+      detail: { streak: currentStreak, bonus: streakBonus, totalScore: currentScore }
+    }));
 
     submitGuessBtn.disabled = true;
     guessInput.disabled = true;
     messageBox.style.color = 'var(--arcade-green)';
-    messageBox.textContent = `★ ${event.detail.message} +${pointsEarned} PTS! NEXT IN 1.5S ★`;
+    messageBox.textContent = `★ ${event.detail.message} ${bonusText} NEXT IN 1.5S ★`;
 
     setTimeout(() => {
       loadPuzzle();
     }, 1500);
 
   } else {
-    // BRANCH B: Incorrect Answer - Play buzz, decrement life
+    // BRANCH B: Incorrect Answer - Play buzz, decrement life, reset combo streak, shake camera
     playArcadeSound('wrong');
+    currentStreak = 0;
+    updateStreakDisplay();
+    triggerScreenShake();
+
+    window.dispatchEvent(new CustomEvent('streak-updated', {
+      detail: { streak: 0, reset: true }
+    }));
+
     lives--;
     updateLivesDisplay();
 
@@ -454,6 +604,7 @@ window.addEventListener('guess-evaluated', (event) => {
     } else {
       // BRANCH C: Game Over - Lives depleted to zero
       clearInterval(timerInterval);
+      timerDisplay.classList.remove('panic-pulse');
       submitGuessBtn.disabled = true;
       guessInput.disabled = true;
       messageBox.style.color = 'var(--arcade-red)';
@@ -472,12 +623,18 @@ window.addEventListener('game-start', (event) => {
   updateLivesDisplay();
   currentScore = 0;
   updateScoreDisplay();
+  currentStreak = 0;
+  updateStreakDisplay();
+  timerDisplay.classList.remove('panic-pulse');
   logToEventStream('game-start', event.detail, 'game-start');
 });
 
 // SUBSCRIBER 9: Listen for custom 'game-over' event (Plays Sound, Persists Score, Shows Modal)
 window.addEventListener('game-over', async (event) => {
   playArcadeSound('gameover');
+  timerDisplay.classList.remove('panic-pulse');
+  currentStreak = 0;
+  updateStreakDisplay();
   logToEventStream('game-over', event.detail, 'timer-expired');
 
   // Asynchronously record final score in SQLite database via POST /api/score
@@ -489,7 +646,10 @@ window.addEventListener('game-over', async (event) => {
     });
     const data = await res.json();
     if (data.success) {
-      logToEventStream('score-saved', { score: currentScore, dbRecord: data.scoreId });
+      // PUBLISHER: Dispatch custom 'score-saved' event
+      window.dispatchEvent(new CustomEvent('score-saved', {
+        detail: { score: currentScore, dbRecord: data.scoreId, username: data.username }
+      }));
     }
   } catch (err) {
     console.error('Failed to persist score:', err);
@@ -501,6 +661,66 @@ window.addEventListener('game-over', async (event) => {
   // Display 90s Game Over modal popup
   gameOverModal.classList.remove('hidden');
 });
+
+// ====================================================
+// GAME JUICE & INTEROP CUSTOM EVENT SUBSCRIBERS
+// ====================================================
+
+// SUBSCRIBER 10: Listen for custom 'score-saved' event (Updates MS-DOS terminal & Marquee High Score)
+window.addEventListener('score-saved', (event) => {
+  logToEventStream('score-saved', event.detail, 'auth-success');
+  const savedScore = event.detail.score || 0;
+  const currentHigh = parseInt(marqueeHigh.textContent, 10) || 0;
+  if (savedScore > currentHigh) {
+    marqueeHigh.textContent = String(savedScore).padStart(4, '0');
+    logToEventStream('high-score-beat', { newHighScore: savedScore });
+  }
+});
+
+// SUBSCRIBER 11: Listen for custom 'streak-updated' event
+window.addEventListener('streak-updated', (event) => {
+  logToEventStream('streak-updated', event.detail, 'game-start');
+});
+
+// SUBSCRIBER 12: Listen for custom 'interop-mode-changed' event
+window.addEventListener('interop-mode-changed', (event) => {
+  logToEventStream('interop-mode-changed', event.detail, 'timer-tick');
+});
+
+// SUBSCRIBER 13: Listen for custom 'sfx-toggled' event
+window.addEventListener('sfx-toggled', (event) => {
+  logToEventStream('sfx-toggled', event.detail);
+});
+
+// ====================================================
+// GAME JUICE CONTROLS: SFX MUTE & INTEROP SIMULATION
+// ====================================================
+
+// SFX Mute / Unmute Toggle Button Listener
+if (sfxToggleBtn) {
+  sfxToggleBtn.addEventListener('click', () => {
+    isMuted = !isMuted;
+    sfxToggleBtn.textContent = isMuted ? '[🔇 SFX: OFF]' : '[🔊 SFX: ON]';
+    sfxToggleBtn.classList.toggle('muted', isMuted);
+    window.dispatchEvent(new CustomEvent('sfx-toggled', { detail: { isMuted } }));
+    if (!isMuted) playArcadeSound('coin');
+  });
+}
+
+// Interoperability Status Pill Click Listener (Simulation Outage Toggle)
+if (apiStatusPill) {
+  apiStatusPill.addEventListener('click', () => {
+    simulateOutage = !simulateOutage;
+    playArcadeSound('click');
+    window.dispatchEvent(new CustomEvent('interop-mode-changed', {
+      detail: {
+        simulatedOutage: simulateOutage,
+        mode: simulateOutage ? 'SIMULATED_FALLBACK' : 'LIVE_MARCCONRAD'
+      }
+    }));
+    loadPuzzle();
+  });
+}
 
 // ====================================================
 // MODAL BUTTON CONTROLLERS (RETRY & EXIT TO LOBBY)
@@ -540,14 +760,16 @@ keypadButtons.forEach((btn) => {
   });
 });
 
-// KEYBOARD SUPPORT: Pressing digits 0-9 on physical keyboard triggers answer instantly
+// KEYBOARD SUPPORT: Pressing digits 0-9 on physical keyboard triggers answer instantly; 'F' toggles outage simulation
 window.addEventListener('keydown', (event) => {
-  // Only capture digits 0-9 when inside active gameplay and not in modal
+  // Only capture keys when inside active gameplay and not in modal
   if (gameSection && !gameSection.classList.contains('hidden') && gameOverModal.classList.contains('hidden')) {
     if (event.key >= '0' && event.key <= '9' && !submitGuessBtn.disabled) {
       playArcadeSound('click');
       guessInput.value = event.key;
       submitGuessBtn.click();
+    } else if (event.key === 'f' || event.key === 'F') {
+      if (apiStatusPill) apiStatusPill.click();
     }
   }
 });

@@ -37,6 +37,9 @@
         <span class="marquee-label blink-text">INSERT COIN</span>
         <span class="marquee-val" style="color: var(--arcade-green);">FREE PLAY</span>
       </div>
+      <div class="marquee-item">
+        <button id="sfx-toggle-btn" class="marquee-mute-btn" type="button" title="Toggle 8-bit sound effects">[🔊 SFX: ON]</button>
+      </div>
     </div>
     <div class="cabinet-title">★ BANANA QUEST ARCADE ★</div>
   </header>
@@ -111,6 +114,16 @@
         <h2>=== PUZZLE CHALLENGE ===</h2>
         <p class="subtitle">PLAYER: <span id="current-user" class="badge-user"></span></p>
 
+        <!-- INTEROPERABILITY HEALTH PILL & COMBO STREAK ROW -->
+        <div class="interop-streak-row">
+          <button id="api-status-pill" class="api-status-pill api-live" type="button" title="Click or press 'F' key to toggle simulated API outage">
+            [🟢 API: LIVE MARCCONRAD]
+          </button>
+          <div id="streak-display" class="streak-badge">
+            STREAK: 0X
+          </div>
+        </div>
+
         <!-- THEME 3: HUD HEADER (SCORE, TIMER & LIVES SYSTEM) -->
         <div class="hud-grid">
           <div id="score-display" class="timer-badge"
@@ -119,6 +132,9 @@
           <div id="lives-display" class="timer-badge"
             style="flex: 1; border-color: var(--arcade-pink); color: var(--arcade-pink);">LIVES: ❤️❤️❤️</div>
         </div>
+
+        <!-- Floating Points Popup Container -->
+        <div id="floating-score-container" class="floating-score-container"></div>
 
         <!-- THEME 2: 3RD-PARTY PUZZLE IMAGE (MARC CONRAD REST API) -->
         <img id="puzzle-img" src="" alt="Arcade Banana Math Puzzle" class="hidden">

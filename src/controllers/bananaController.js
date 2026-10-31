@@ -18,6 +18,11 @@ const FALLBACK_PUZZLE = {
 // Controller method to fetch puzzle from Marc Conrad's external API with fallback resilience
 exports.getPuzzle = async (req, res) => {
   try {
+    // Check if client requested a simulated outage for presentation demonstration
+    if (req.query.simulateOutage === 'true') {
+      throw new Error('Simulated external API outage for demonstration');
+    }
+
     // External REST API endpoint URL provided by Marc Conrad
     const apiUrl = 'https://marcconrad.com/uob/banana/api.php?out=json';
 
@@ -36,8 +41,11 @@ exports.getPuzzle = async (req, res) => {
     // Store correct answer into server-side session to secure against client manipulation
     req.session.solution = data.solution;
 
-    // Send puzzle image question URL to client without exposing the solution
-    return res.json({ question: data.question });
+    // Send puzzle image question URL and source provenance to client without exposing solution
+    return res.json({
+      question: data.question,
+      source: 'LIVE_MARCCONRAD'
+    });
 
   } catch (error) {
     // GRACEFUL DEGRADATION: Log external network failure to server console
@@ -46,8 +54,11 @@ exports.getPuzzle = async (req, res) => {
     // Bind fallback solution into user's session so game remains fully playable
     req.session.solution = FALLBACK_PUZZLE.solution;
 
-    // Respond to frontend with identical contract structure so client continues seamlessly
-    return res.json({ question: FALLBACK_PUZZLE.question });
+    // Respond to frontend with identical contract structure and fallback source indicator
+    return res.json({
+      question: FALLBACK_PUZZLE.question,
+      source: 'FALLBACK_CACHE'
+    });
   }
 };
 
@@ -58,6 +69,14 @@ exports.checkAnswer = (req, res) => {
 
   // Retrieve correct solution previously saved in session (whether live API or fallback)
   const solution = req.session.solution;
+
+  // Edge-case guard: Verify that an active puzzle solution exists in the user's session
+  if (solution === undefined) {
+    return res.status(400).json({
+      success: false,
+      message: 'No active puzzle. Please fetch a puzzle before submitting an answer.'
+    });
+  }
 
   // Compare parsed integer guess against stored solution
   if (parseInt(guess, 10) === solution) {
@@ -77,8 +96,8 @@ exports.saveScore = (req, res) => {
   // Retrieve authenticated username directly from server-side session cookie (Virtual Identity)
   const username = req.session.username;
 
-  // Parse numeric score safely
-  const numericScore = parseInt(score, 10) || 0;
+  // Parse numeric score safely and prevent negative values
+  const numericScore = Math.max(0, parseInt(score, 10) || 0);
 
   // Parameterized SQL INSERT statement to prevent SQL injection
   const sql = 'INSERT INTO scores (username, score) VALUES (?, ?)';

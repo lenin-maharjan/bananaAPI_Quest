@@ -480,6 +480,187 @@ button:disabled {
   to { transform: scale(1); opacity: 1; }
 }
 
+/* ==================================================== */
+/* THEME 3: GAME JUICE & PRESENTATION POLISH UPGRADES   */
+/* ==================================================== */
+
+/* Marquee SFX Mute / Unmute Toggle Button */
+.marquee-mute-btn {
+  background: #111;
+  color: var(--arcade-yellow);
+  font-family: 'Press Start 2P', monospace;
+  font-size: 0.58rem;
+  padding: 6px 10px;
+  border: 2px solid var(--arcade-yellow);
+  border-radius: 4px;
+  cursor: pointer;
+  box-shadow: 0 0 8px rgba(255, 230, 0, 0.4);
+  transition: all 0.15s ease;
+}
+
+.marquee-mute-btn:hover {
+  background: var(--arcade-yellow);
+  color: #000;
+  box-shadow: 0 0 15px var(--arcade-yellow);
+}
+
+.marquee-mute-btn.muted {
+  border-color: #64748b;
+  color: #94a3b8;
+  box-shadow: none;
+}
+
+/* Interoperability Status Pill & Combo Streak Row */
+.interop-streak-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+/* Interoperability Status Pill */
+.api-status-pill {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 0.58rem;
+  padding: 8px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  background: rgba(0, 0, 0, 0.7);
+  transition: all 0.2s ease;
+  user-select: none;
+  text-align: center;
+}
+
+.api-status-pill.api-live {
+  border: 2px solid var(--arcade-green);
+  color: var(--arcade-green);
+  box-shadow: 0 0 10px rgba(57, 255, 20, 0.4);
+}
+
+.api-status-pill.api-live:hover {
+  background: rgba(57, 255, 20, 0.15);
+  box-shadow: 0 0 16px var(--arcade-green);
+}
+
+.api-status-pill.api-fallback {
+  border: 2px solid #ff9900;
+  color: #ff9900;
+  box-shadow: 0 0 12px rgba(255, 153, 0, 0.6);
+  animation: fallbackBlink 1.2s infinite ease-in-out;
+}
+
+@keyframes fallbackBlink {
+  0%, 100% { opacity: 1; border-color: #ff9900; }
+  50% { opacity: 0.6; border-color: #ffcc00; }
+}
+
+/* Combo Streak Multiplier Badge */
+.streak-badge {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 0.6rem;
+  padding: 8px 12px;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.7);
+  border: 2px solid #475569;
+  color: #94a3b8;
+  letter-spacing: 1px;
+  transition: all 0.2s ease;
+}
+
+.streak-badge.streak-active {
+  border-color: var(--arcade-yellow);
+  color: var(--arcade-yellow);
+  box-shadow: 0 0 12px rgba(255, 230, 0, 0.5);
+}
+
+.streak-badge.streak-fire {
+  border-color: var(--arcade-pink);
+  color: #fff;
+  background: linear-gradient(135deg, rgba(255, 0, 127, 0.4), rgba(255, 49, 49, 0.4));
+  box-shadow: 0 0 20px var(--arcade-pink);
+  animation: fireGlow 0.8s infinite alternate ease-in-out;
+}
+
+@keyframes fireGlow {
+  from { transform: scale(1); text-shadow: 0 0 8px #ff007f; }
+  to { transform: scale(1.05); text-shadow: 0 0 16px #ff3131, 0 0 24px #ffe600; }
+}
+
+/* Panic Mode (< 10s Timer) */
+.timer-badge.panic-pulse {
+  border-color: var(--arcade-red) !important;
+  color: var(--arcade-red) !important;
+  box-shadow: 0 0 20px var(--arcade-red), inset 0 0 10px rgba(255, 49, 49, 0.5) !important;
+  animation: panicTick 0.5s infinite alternate ease-in-out;
+}
+
+@keyframes panicTick {
+  from { transform: scale(1); background: rgba(255, 49, 49, 0.1); }
+  to { transform: scale(1.06); background: rgba(255, 49, 49, 0.35); }
+}
+
+/* Screen Shake on Damage (Wrong Guess / Heart Loss) */
+.screen-shake {
+  animation: screenShakeAnim 0.38s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+@keyframes screenShakeAnim {
+  10%, 90% { transform: translate3d(-3px, 0, 0); }
+  20%, 80% { transform: translate3d(4px, 0, 0); }
+  30%, 50%, 70% { transform: translate3d(-5px, 0, 0); }
+  40%, 60% { transform: translate3d(5px, 0, 0); }
+}
+
+/* Red CRT Damage Flash Overlay */
+.damage-flash {
+  animation: damageFlashAnim 0.4s ease-out;
+}
+
+@keyframes damageFlashAnim {
+  0% { box-shadow: 0 0 40px rgba(255, 49, 49, 0.95), inset 0 0 40px rgba(255, 49, 49, 0.8); }
+  100% { box-shadow: 0 0 25px rgba(0, 240, 255, 0.2), inset 0 0 15px rgba(0, 0, 0, 0.8); }
+}
+
+/* Green Screen Heal / Victory Pulse */
+.heal-flash {
+  animation: healFlashAnim 0.45s ease-out;
+}
+
+@keyframes healFlashAnim {
+  0% { box-shadow: 0 0 40px rgba(57, 255, 20, 0.9), inset 0 0 30px rgba(57, 255, 20, 0.6); }
+  100% { box-shadow: 0 0 25px rgba(0, 240, 255, 0.2), inset 0 0 15px rgba(0, 0, 0, 0.8); }
+}
+
+/* Floating Points Popup Animation */
+.floating-score-container {
+  position: relative;
+  width: 100%;
+  pointer-events: none;
+  height: 0;
+}
+
+.floating-points {
+  position: absolute;
+  top: -24px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: 'Press Start 2P', monospace;
+  font-size: 1.15rem;
+  color: var(--arcade-yellow);
+  text-shadow: 0 0 12px var(--arcade-yellow), 0 0 24px #ff9900;
+  animation: floatUpAnim 1.4s ease-out forwards;
+  z-index: 1000;
+  white-space: nowrap;
+}
+
+@keyframes floatUpAnim {
+  0% { transform: translate(-50%, 0) scale(0.8); opacity: 0; }
+  20% { transform: translate(-50%, -10px) scale(1.2); opacity: 1; }
+  80% { transform: translate(-50%, -45px) scale(1); opacity: 0.9; }
+  100% { transform: translate(-50%, -65px) scale(0.9); opacity: 0; }
+}
+
 /* Utility */
 .hidden {
   display: none !important;

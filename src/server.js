@@ -53,6 +53,15 @@ app.use('/api', authRoutes);
 // Mount modular banana game routes under '/api' prefix
 app.use('/api', bananaRoutes);
 
+// Global Error Handling Middleware: Sanitizes unhandled exceptions and prevents stack trace leakage
+app.use((err, req, res, next) => {
+  console.error('Unhandled server exception caught by global middleware:', err.message);
+  res.status(500).json({
+    success: false,
+    message: 'An unexpected internal server error occurred'
+  });
+});
+
 // Start the HTTP server on the configured port
 app.listen(PORT, () => {
   // Output confirmation to console
