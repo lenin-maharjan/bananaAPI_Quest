@@ -118,7 +118,7 @@
         <!-- INTEROPERABILITY HEALTH PILL & COMBO STREAK ROW -->
         <div class="interop-streak-row">
           <button id="api-status-pill" class="api-status-pill api-live" type="button" title="Click or press 'F' key to toggle simulated API outage">
-            [🟢 API: LIVE MARCCONRAD]
+            [🟢 API: ONLINE (CLICK TO SIMULATE OUTAGE)]
           </button>
           <div id="streak-display" class="streak-badge">
             STREAK: 0X
@@ -147,7 +147,7 @@
         <div id="guess-container" class="hidden" style="margin-top: 18px;">
           <div class="form-group" style="margin-bottom: 8px;">
             <label for="guess-input">&gt; ENTER SOLUTION (CLICK KEYPAD OR TYPE 0-9):</label>
-            <input type="number" id="guess-input" min="0" max="9" placeholder="PRESS 0-9 KEY">
+            <input type="text" id="guess-input" inputmode="numeric" pattern="[0-9]" maxlength="1" placeholder="PRESS 0-9 KEY">
           </div>
 
           <!-- Chunky 0-9 Arcade Push Buttons -->

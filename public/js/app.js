@@ -84,6 +84,11 @@ let isMuted = false;
 let simulateOutage = false;
 let currentStreak = 0;
 
+// Auto-advance timer and concurrency guards
+let autoAdvanceTimeout = null;
+let isLoadingPuzzle = false;
+let isSubmitting = false;
+
 // Persistent Settings State Object (Localstorage)
 const DEFAULT_SETTINGS = {
   sfxEnabled: true,
@@ -361,7 +366,9 @@ function applySettingsToUI() {
   }
   if (apiStatusPill) {
     apiStatusPill.className = simulateOutage ? 'api-status-pill api-fallback' : 'api-status-pill api-live';
-    apiStatusPill.textContent = simulateOutage ? '[🟠 API: FALLBACK CACHE]' : '[🟢 API: LIVE MARCCONRAD]';
+    apiStatusPill.textContent = simulateOutage 
+      ? '[🟠 API: OFFLINE BACKUP MODE (CLICK FOR LIVE)]' 
+      : '[🟢 API: ONLINE (CLICK TO SIMULATE OUTAGE)]';
   }
 }
 
@@ -371,6 +378,13 @@ function applySettingsToUI() {
 
 // Helper function to transition between the 3 distinct application views
 function switchView(targetView) {
+  // Clear any pending round auto-advance timer to prevent view collisions
+  if (autoAdvanceTimeout) {
+    clearTimeout(autoAdvanceTimeout);
+    autoAdvanceTimeout = null;
+  }
+  clearInterval(timerInterval);
+
   // Show or hide login card depending on active state
   loginSection.classList.toggle('hidden', targetView !== 'login');
   // Show or hide arcade main menu dashboard card
@@ -496,6 +510,11 @@ clearStreamBtn.addEventListener('click', () => {
 
 // Function to start the event-driven arcade countdown timer
 function startTimer() {
+  // Clear any pending round auto-advance timer
+  if (autoAdvanceTimeout) {
+    clearTimeout(autoAdvanceTimeout);
+    autoAdvanceTimeout = null;
+  }
   // Stop any active timer interval
   clearInterval(timerInterval);
   // Set timer to configured difficulty DIP switch (default 45s, 60s easy, 20s hard)
@@ -598,8 +617,18 @@ window.addEventListener('auth-logout', (event) => {
 
 // Helper function to request puzzle from backend proxy (supports background pre-fetching & simulated outages)
 async function loadPuzzle() {
+  // Clear any pending round auto-advance timer to prevent double-load collisions
+  if (autoAdvanceTimeout) {
+    clearTimeout(autoAdvanceTimeout);
+    autoAdvanceTimeout = null;
+  }
+
+  // Guard against rapid duplicate clicks
+  if (isLoadingPuzzle) return;
+  isLoadingPuzzle = true;
+
   messageBox.style.color = 'var(--arcade-cyan)';
-  messageBox.textContent = simulateOutage ? 'SIMULATING OUTAGE: ENGAGING FALLBACK CACHE...' : 'FETCHING PUZZLE FROM FAST PRE-FETCH BUFFER...';
+  messageBox.textContent = simulateOutage ? 'SIMULATING OUTAGE: ENGAGING BACKUP CACHE...' : 'FETCHING PUZZLE FROM FAST BUFFER...';
 
   try {
     const query = simulateOutage ? '?simulateOutage=true' : '';
@@ -623,55 +652,45 @@ async function loadPuzzle() {
   } catch (error) {
     messageBox.style.color = 'var(--arcade-red)';
     messageBox.textContent = 'ERROR LOADING PUZZLE';
+  } finally {
+    isLoadingPuzzle = false;
   }
 }
 
-// SUBSCRIBER 6: Listen for custom 'puzzle-loaded' event (Image Preloading & Timer Sync)
+// SUBSCRIBER 6: Listen for custom 'puzzle-loaded' event (Instant Display & Non-Blocking Play)
 window.addEventListener('puzzle-loaded', (event) => {
-  // 1. Pause active timer so player never loses seconds while image downloads/decodes
-  clearInterval(timerInterval);
-  timerDisplay.classList.remove('panic-pulse');
+  // Clear any lingering auto-advance timer
+  if (autoAdvanceTimeout) {
+    clearTimeout(autoAdvanceTimeout);
+    autoAdvanceTimeout = null;
+  }
 
-  // 2. Show loading status in message box until image is completely ready in DOM
-  messageBox.style.color = 'var(--arcade-yellow)';
-  messageBox.textContent = '⏳ DECODING PUZZLE ASSET...';
-
+  // Ensure gameplay elements are visible
   puzzleImg.classList.remove('hidden');
   guessContainer.classList.remove('hidden');
-  submitGuessBtn.disabled = true;
-  guessInput.disabled = true;
 
-  // 3. When image finishes loading in the browser, start the timer cleanly!
-  puzzleImg.onload = () => {
-    messageBox.textContent = '';
-    submitGuessBtn.disabled = false;
-    guessInput.disabled = false;
-    guessInput.value = '';
-    guessInput.focus();
-    startTimer();
-  };
+  // NON-BLOCKING: Immediately enable input and buttons so game NEVER locks up
+  submitGuessBtn.disabled = false;
+  guessInput.disabled = false;
+  guessInput.value = '';
+  messageBox.textContent = '';
+  guessInput.focus();
 
-  // 4. Fallback if image fails to render
-  puzzleImg.onerror = () => {
-    messageBox.style.color = 'var(--arcade-red)';
-    messageBox.textContent = '⚠️ IMAGE LOAD DELAY - TIMER STARTED';
-    submitGuessBtn.disabled = false;
-    guessInput.disabled = false;
-    guessInput.focus();
-    startTimer();
-  };
-
-  // Trigger image fetch
+  // Set puzzle image URL
   puzzleImg.src = event.detail.imageUrl;
+
+  // Clear panic mode and immediately start round timer
+  timerDisplay.classList.remove('panic-pulse');
+  startTimer();
 
   // Update Interoperability Health Status Pill in HUD
   if (apiStatusPill) {
     if (event.detail.source === 'FALLBACK_CACHE') {
       apiStatusPill.className = 'api-status-pill api-fallback';
-      apiStatusPill.textContent = '[🟠 API: FALLBACK CACHE]';
+      apiStatusPill.textContent = '[🟠 API: OFFLINE BACKUP MODE (CLICK FOR LIVE)]';
     } else {
       apiStatusPill.className = 'api-status-pill api-live';
-      apiStatusPill.textContent = event.detail.prefetched ? '[🟢 API: BUFFER (FAST)]' : '[🟢 API: LIVE MARCCONRAD]';
+      apiStatusPill.textContent = '[🟢 API: ONLINE (CLICK TO SIMULATE OUTAGE)]';
     }
   }
 
@@ -719,7 +738,11 @@ window.addEventListener('guess-evaluated', (event) => {
     messageBox.style.color = 'var(--arcade-green)';
     messageBox.textContent = `★ ${event.detail.message} ${bonusText} NEXT IN 1.5S ★`;
 
-    setTimeout(() => {
+    if (autoAdvanceTimeout) {
+      clearTimeout(autoAdvanceTimeout);
+      autoAdvanceTimeout = null;
+    }
+    autoAdvanceTimeout = setTimeout(() => {
       loadPuzzle();
     }, 1500);
 
@@ -744,6 +767,10 @@ window.addEventListener('guess-evaluated', (event) => {
       guessInput.focus();
     } else {
       // BRANCH C: Game Over - Lives depleted to zero
+      if (autoAdvanceTimeout) {
+        clearTimeout(autoAdvanceTimeout);
+        autoAdvanceTimeout = null;
+      }
       clearInterval(timerInterval);
       timerDisplay.classList.remove('panic-pulse');
       submitGuessBtn.disabled = true;
@@ -857,6 +884,10 @@ if (sfxToggleBtn) {
 // Interoperability Status Pill Click Listener (Simulation Outage Toggle)
 if (apiStatusPill) {
   apiStatusPill.addEventListener('click', () => {
+    if (autoAdvanceTimeout) {
+      clearTimeout(autoAdvanceTimeout);
+      autoAdvanceTimeout = null;
+    }
     simulateOutage = !simulateOutage;
     currentSettings.simulateOutage = simulateOutage;
     saveSettingsToStorage();
@@ -944,6 +975,10 @@ if (settingVfxToggle) {
 
 if (settingApiToggle) {
   settingApiToggle.addEventListener('click', () => {
+    if (autoAdvanceTimeout) {
+      clearTimeout(autoAdvanceTimeout);
+      autoAdvanceTimeout = null;
+    }
     currentSettings.simulateOutage = !currentSettings.simulateOutage;
     applySettingsToUI();
     playArcadeSound('click');
@@ -997,9 +1032,10 @@ modalMenuBtn.addEventListener('click', () => {
 // Attach click listener to each on-screen arcade keypad button
 keypadButtons.forEach((btn) => {
   btn.addEventListener('click', () => {
+    if (submitGuessBtn.disabled || isSubmitting) return;
     // Play button click synth sound
     playArcadeSound('click');
-    // Set guess input value to button's digit
+    // Set guess input strictly to button's single digit
     guessInput.value = btn.dataset.val;
     // Automatically trigger submission
     submitGuessBtn.click();
@@ -1008,17 +1044,51 @@ keypadButtons.forEach((btn) => {
 
 // KEYBOARD SUPPORT: Pressing digits 0-9 on physical keyboard triggers answer instantly; 'F' toggles outage simulation
 window.addEventListener('keydown', (event) => {
-  // Only capture keys when inside active gameplay and not in modal
-  if (gameSection && !gameSection.classList.contains('hidden') && gameOverModal.classList.contains('hidden')) {
-    if (event.key >= '0' && event.key <= '9' && !submitGuessBtn.disabled) {
-      playArcadeSound('click');
-      guessInput.value = event.key;
-      submitGuessBtn.click();
+  // Only capture keys when inside active gameplay and not in any modal
+  const inGame = gameSection && !gameSection.classList.contains('hidden');
+  const modalOpen = !gameOverModal.classList.contains('hidden') || (settingsModal && !settingsModal.classList.contains('hidden'));
+
+  if (inGame && !modalOpen) {
+    if (event.key >= '0' && event.key <= '9') {
+      // PREVENT BROWSER DEFAULT: Stops double typing ("55") into focused input field!
+      event.preventDefault();
+      if (!submitGuessBtn.disabled && !isSubmitting) {
+        playArcadeSound('click');
+        guessInput.value = event.key; // Overwrite strictly with single digit
+        submitGuessBtn.click();
+      }
     } else if (event.key === 'f' || event.key === 'F') {
       if (apiStatusPill) apiStatusPill.click();
     }
   }
 });
+
+// Input Sanitization: Guarantee only a single digit (0-9) can ever be entered into guessInput
+if (guessInput) {
+  guessInput.addEventListener('input', (event) => {
+    const sanitized = event.target.value.replace(/[^0-9]/g, '');
+    if (sanitized.length > 0) {
+      // Overwrite strictly with the single most recently entered digit
+      const singleDigit = sanitized.slice(-1);
+      event.target.value = singleDigit;
+      if (!submitGuessBtn.disabled && !isSubmitting) {
+        playArcadeSound('click');
+        submitGuessBtn.click();
+      }
+    } else {
+      event.target.value = '';
+    }
+  });
+
+  guessInput.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      if (!submitGuessBtn.disabled && !isSubmitting) {
+        submitGuessBtn.click();
+      }
+    }
+  });
+}
 
 // ====================================================
 // DOM EVENT HANDLERS (LOGIN, REGISTER, NAVIGATION)
@@ -1122,31 +1192,49 @@ dashLogoutBtn.addEventListener('click', performLogout);
 
 // DOM CLICK 7: Load New Puzzle Button
 fetchPuzzleBtn.addEventListener('click', () => {
+  if (autoAdvanceTimeout) {
+    clearTimeout(autoAdvanceTimeout);
+    autoAdvanceTimeout = null;
+  }
   playArcadeSound('click');
   loadPuzzle();
 });
 
 // DOM CLICK 8: Submit Answer Guess Button
 submitGuessBtn.addEventListener('click', async () => {
-  const guess = guessInput.value;
+  if (isSubmitting || submitGuessBtn.disabled) return;
+  const guess = guessInput.value.trim();
 
   if (guess === '') {
-    alert('PLEASE ENTER OR CLICK A DIGIT 0-9');
+    messageBox.style.color = 'var(--arcade-yellow)';
+    messageBox.textContent = 'PLEASE ENTER OR CLICK A DIGIT 0-9';
     return;
   }
 
-  const response = await fetch('/api/check-answer', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ guess })
-  });
+  isSubmitting = true;
+  submitGuessBtn.disabled = true;
+  guessInput.disabled = true;
 
-  const result = await response.json();
+  try {
+    const response = await fetch('/api/check-answer', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ guess })
+    });
 
-  // PUBLISHER: Dispatch custom 'guess-evaluated' event
-  window.dispatchEvent(new CustomEvent('guess-evaluated', {
-    detail: { guess: parseInt(guess, 10), correct: result.correct, message: result.message }
-  }));
+    const result = await response.json();
+
+    // PUBLISHER: Dispatch custom 'guess-evaluated' event
+    window.dispatchEvent(new CustomEvent('guess-evaluated', {
+      detail: { guess: parseInt(guess, 10), correct: result.correct, message: result.message }
+    }));
+  } catch (err) {
+    console.error('Answer check error:', err);
+    submitGuessBtn.disabled = false;
+    guessInput.disabled = false;
+  } finally {
+    isSubmitting = false;
+  }
 });
 
 // Initial startup: Query backend for active virtual identity session
