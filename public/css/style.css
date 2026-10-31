@@ -39,7 +39,7 @@ body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  padding: 16px;
+  padding: 24px;
   overflow-x: hidden;
 }
 
@@ -47,21 +47,26 @@ body {
 /* 90s ARCADE MARQUEE TOP HEADER                        */
 /* ==================================================== */
 .marquee-header {
-  max-width: 1250px;
-  width: 100%;
-  margin: 0 auto 20px auto;
+  max-width: 1400px;
+  width: 94vw;
+  margin: 0 auto 28px auto;
   background: #090e17;
   border: 4px solid var(--arcade-yellow);
-  box-shadow: 0 0 15px rgba(255, 230, 0, 0.4), inset 0 0 10px rgba(0, 0, 0, 0.8);
-  padding: 14px 20px;
-}
-
-.marquee-stats {
+  box-shadow: 0 0 20px rgba(255, 230, 0, 0.45), inset 0 0 14px rgba(0, 0, 0, 0.8);
+  border-radius: 10px;
+  padding: 18px 28px;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 20px;
   flex-wrap: wrap;
-  gap: 12px;
+}
+
+.marquee-stats-group {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  flex-wrap: wrap;
 }
 
 .marquee-item {
@@ -73,11 +78,11 @@ body {
 .marquee-label {
   font-size: 0.65rem;
   color: var(--arcade-red);
-  letter-spacing: 1px;
+  letter-spacing: 1.2px;
 }
 
 .marquee-val {
-  font-size: 0.95rem;
+  font-size: 1rem;
   color: var(--arcade-yellow);
   margin-top: 4px;
 }
@@ -93,11 +98,17 @@ body {
 
 .cabinet-title {
   text-align: center;
-  font-size: 1.25rem;
+  font-size: 1.35rem;
   color: var(--arcade-cyan);
-  text-shadow: 2px 2px 0px #000, 0 0 10px rgba(0, 240, 255, 0.7);
-  letter-spacing: 2px;
-  margin-top: 8px;
+  text-shadow: 2px 2px 0px #000, 0 0 12px rgba(0, 240, 255, 0.7);
+  letter-spacing: 2.5px;
+  margin: 0;
+}
+
+.marquee-controls-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 /* ==================================================== */
@@ -105,17 +116,23 @@ body {
 /* ==================================================== */
 .dashboard-layout {
   display: grid;
-  grid-template-columns: 1.15fr 0.85fr;
-  gap: 20px;
-  max-width: 1250px;
-  width: 100%;
+  grid-template-columns: 1.25fr 0.95fr;
+  gap: 32px;
+  max-width: 1400px;
+  width: 94vw;
   margin: 0 auto;
   align-items: start;
 }
 
-@media (max-width: 950px) {
+@media (max-width: 1024px) {
   .dashboard-layout {
     grid-template-columns: 1fr;
+    gap: 24px;
+  }
+  .marquee-header {
+    flex-direction: column;
+    text-align: center;
+    gap: 16px;
   }
 }
 
@@ -125,56 +142,65 @@ body {
 .card {
   background: #0c121e;
   border: 4px solid var(--arcade-cyan);
-  box-shadow: 6px 6px 0px #000, 0 0 15px rgba(0, 240, 255, 0.25);
-  padding: 22px;
+  border-radius: 10px;
+  box-shadow: 6px 6px 0px #000, 0 0 20px rgba(0, 240, 255, 0.25);
+  padding: 32px 36px;
   position: relative;
 }
 
 .card h2 {
-  font-size: 0.9rem;
+  font-size: 1rem;
   color: var(--arcade-yellow);
   text-transform: uppercase;
-  letter-spacing: 1px;
-  margin-bottom: 8px;
+  letter-spacing: 1.5px;
+  margin-bottom: 10px;
   text-shadow: 2px 2px 0px #000;
 }
 
 .card p.subtitle {
   font-family: var(--font-dos);
-  font-size: 1.15rem;
+  font-size: 1.25rem;
   color: #94a3b8;
   letter-spacing: 1px;
-  margin-bottom: 18px;
+  margin-bottom: 24px;
 }
 
-/* Inputs */
+/* Inputs & Form Groups */
 .form-group {
-  margin-bottom: 16px;
+  margin-bottom: 22px;
 }
 
 label {
   display: block;
-  font-size: 0.65rem;
+  font-size: 0.68rem;
   color: var(--arcade-cyan);
   letter-spacing: 1px;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
 }
 
-input {
+input[type="text"], input[type="password"] {
   width: 100%;
-  padding: 12px 14px;
+  padding: 14px 16px;
   background-color: #05080f;
   border: 3px solid var(--arcade-cyan);
+  border-radius: 6px;
   color: var(--arcade-green);
   font-family: var(--font-arcade);
-  font-size: 0.75rem;
+  font-size: 0.95rem;
   box-shadow: inset 3px 3px 0px #000;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
-input:focus {
+input[type="text"]:focus, input[type="password"]:focus {
   outline: none;
   border-color: var(--arcade-yellow);
-  box-shadow: 0 0 10px rgba(255, 230, 0, 0.5), inset 3px 3px 0px #000;
+  box-shadow: 0 0 12px rgba(255, 230, 0, 0.5), inset 3px 3px 0px #000;
+}
+
+.auth-btn-row {
+  display: flex;
+  gap: 16px;
+  margin-top: 24px;
 }
 
 /* ==================================================== */
@@ -182,11 +208,12 @@ input:focus {
 /* ==================================================== */
 button {
   font-family: var(--font-arcade);
-  font-size: 0.72rem;
+  font-size: 0.76rem;
   letter-spacing: 1px;
   text-transform: uppercase;
-  padding: 14px;
+  padding: 16px;
   border: 3px solid #000;
+  border-radius: 6px;
   box-shadow: 0 5px 0 #000, 0 8px 0 rgba(0,0,0,0.5);
   cursor: pointer;
   width: 100%;
@@ -212,8 +239,11 @@ button:active {
 #start-game-btn {
   background: linear-gradient(to bottom, #39ff14, #27ae60);
   color: #000;
-  font-size: 0.85rem;
+  font-size: 0.95rem;
   padding: 18px;
+  margin: 20px 0 28px 0;
+  border-radius: 8px;
+  border: 3px solid #fff;
   animation: pulseCabinet 1.5s infinite alternate;
 }
 
@@ -225,7 +255,6 @@ button:active {
 #fetch-puzzle-btn {
   background: linear-gradient(to bottom, #00f0ff, #0099cc);
   color: #000;
-  margin-top: 12px;
 }
 
 .danger-btn {
@@ -242,23 +271,38 @@ button:disabled {
 /* ==================================================== */
 /* 90s ARCADE CABINET BUTTON KEYPAD (0-9)               */
 /* ==================================================== */
+.visually-hidden-inputs {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
 .arcade-keypad {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
-  gap: 10px;
-  margin-top: 12px;
+  gap: 14px;
+  margin: 14px 0 24px 0;
 }
 
 .keypad-btn {
   background: radial-gradient(circle at 35% 35%, #00f0ff, #005577);
   color: #fff;
-  font-size: 1rem;
-  padding: 14px 0;
+  font-size: 1.15rem;
+  padding: 16px 0;
   border-radius: 8px;
   border: 3px solid #002233;
-  box-shadow: 0 4px 0 #001122, inset 1px 1px 2px #fff;
+  box-shadow: 0 5px 0 #001122, inset 1px 1px 2px #fff;
   cursor: pointer;
   text-shadow: 1px 1px 0px #000;
+  transition: all 0.08s ease;
 }
 
 .keypad-btn:hover {
@@ -266,42 +310,95 @@ button:disabled {
 }
 
 .keypad-btn:active {
-  transform: translateY(3px);
+  transform: translateY(4px);
   box-shadow: 0 1px 0 #001122;
+}
+
+/* Bottom Utility Navigation Bar */
+.game-bottom-nav {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  margin-top: 20px;
+}
+
+.game-bottom-nav button {
+  margin-top: 0 !important;
+  border-radius: 6px;
+}
+
+@media (max-width: 650px) {
+  .game-bottom-nav {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* ==================================================== */
 /* HALL OF FAME / TOP 5 HIGH SCORES TABLE               */
 /* ==================================================== */
+.leaderboard-section-wrapper {
+  margin-top: 24px;
+}
+
+.leaderboard-title {
+  font-size: 0.76rem;
+  color: var(--arcade-yellow);
+  margin-bottom: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
 .leaderboard-cabinet {
   background: #04070e;
   border: 3px solid var(--cabinet-gold);
-  box-shadow: inset 0 0 12px rgba(0, 0, 0, 0.9);
-  padding: 12px;
+  border-radius: 8px;
+  box-shadow: inset 0 0 16px rgba(0, 0, 0, 0.9), 0 0 12px rgba(251, 191, 36, 0.2);
+  padding: 16px 20px;
   margin-top: 10px;
 }
 
 .leaderboard-header {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: 80px 1fr 140px;
+  align-items: center;
   border-bottom: 2px solid var(--cabinet-gold);
-  padding-bottom: 8px;
-  margin-bottom: 8px;
-  font-size: 0.65rem;
+  padding: 12px 18px;
+  margin-bottom: 6px;
+  font-size: 0.72rem;
   color: var(--arcade-red);
+  letter-spacing: 1.5px;
+}
+
+.leaderboard-header span:last-child {
+  text-align: right;
 }
 
 .leaderboard-row {
-  display: flex;
-  justify-content: space-between;
-  padding: 8px 4px;
-  border-bottom: 1px dashed #1e293b;
+  display: grid;
+  grid-template-columns: 80px 1fr 140px;
+  align-items: center;
+  padding: 14px 18px;
+  border-bottom: 1px dashed rgba(30, 41, 59, 0.8);
   font-family: var(--font-arcade);
-  font-size: 0.65rem;
+  font-size: 0.72rem;
+  border-radius: 4px;
+  transition: background 0.15s ease;
+}
+
+.leaderboard-row:nth-child(even) {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.leaderboard-row:hover {
+  background: rgba(251, 191, 36, 0.08);
 }
 
 .leaderboard-row:last-child {
   border-bottom: none;
+}
+
+.leaderboard-row span:last-child {
+  text-align: right;
 }
 
 .rank-1 { color: var(--arcade-yellow); text-shadow: 0 0 5px var(--arcade-yellow); }
@@ -310,13 +407,43 @@ button:disabled {
 .rank-default { color: #94a3b8; }
 .score-gold { color: var(--arcade-green); }
 
+#dash-logout-btn {
+  margin-top: 28px;
+  border-radius: 6px;
+}
+
 /* ==================================================== */
-/* HUD STATS (SCORE, TIME, LIVES)                       */
+/* SCREEN 3: PUZZLE CHALLENGE GAMEPLAY LAYOUT           */
 /* ==================================================== */
-.hud-grid {
+
+/* Top Header Row with Title & API Status Pill */
+.challenge-header-row {
   display: flex;
-  gap: 8px;
-  margin-bottom: 16px;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+  padding-bottom: 14px;
+  border-bottom: 2px solid rgba(0, 240, 255, 0.2);
+}
+
+.challenge-title-group h2 {
+  margin-bottom: 4px;
+}
+
+/* Unified 4-Stat HUD Grid (Score, Timer, Lives, Streak) */
+.hud-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin: 18px 0;
+}
+
+@media (max-width: 720px) {
+  .hud-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 .timer-badge {
@@ -325,19 +452,49 @@ button:disabled {
   color: var(--arcade-red);
   font-size: 0.68rem;
   text-align: center;
-  padding: 10px 4px;
+  padding: 12px 14px;
+  border-radius: 6px;
   box-shadow: 3px 3px 0px #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 46px;
 }
 
+.hud-score {
+  border-color: var(--arcade-yellow) !important;
+  color: var(--arcade-yellow) !important;
+}
+
+.hud-timer {
+  border-color: var(--arcade-cyan) !important;
+  color: var(--arcade-cyan) !important;
+}
+
+.hud-lives {
+  border-color: var(--arcade-pink) !important;
+  color: var(--arcade-pink) !important;
+}
+
+.hud-streak {
+  background: rgba(0, 0, 0, 0.7) !important;
+  border: 2px solid #475569 !important;
+  color: #94a3b8 !important;
+}
+
+/* Recessed CRT Puzzle Frame */
 #puzzle-img {
+  padding: 16px;
+  background: #04070e;
+  border: 2px solid #1e293b;
+  border-radius: 8px;
+  max-height: 290px;
   max-width: 100%;
-  height: auto;
+  object-fit: contain;
+  margin: 0 auto 16px auto;
   display: block;
-  margin: 14px auto;
-  border: 4px solid var(--arcade-yellow);
-  box-shadow: 5px 5px 0px #000;
-  background: #fff;
-  image-rendering: pixelated;
+  box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.95), 0 0 15px rgba(0, 240, 255, 0.15);
+  image-rendering: auto;
 }
 
 .badge-user {
@@ -346,15 +503,29 @@ button:disabled {
   color: var(--arcade-green);
   padding: 4px 8px;
   font-size: 0.65rem;
+  border-radius: 4px;
 }
 
+/* Fixed-Height Feedback Banner */
 #message-box, #auth-message {
-  font-family: var(--font-dos);
-  font-size: 1.3rem;
-  letter-spacing: 1px;
-  min-height: 28px;
+  min-height: 44px;
+  padding: 10px 16px;
+  margin-bottom: 18px;
+  border-radius: 6px;
+  background: rgba(15, 23, 42, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   text-align: center;
-  margin-top: 14px;
+  font-family: var(--font-dos);
+  font-size: 1.35rem;
+  letter-spacing: 1px;
+}
+
+#auth-message {
+  margin-top: 18px;
+  margin-bottom: 0;
 }
 
 /* ==================================================== */
@@ -363,25 +534,29 @@ button:disabled {
 #event-stream-console {
   background-color: #030704;
   border: 4px solid var(--arcade-green);
-  box-shadow: 5px 5px 0px #000, 0 0 15px rgba(57, 255, 20, 0.3);
+  border-radius: 10px;
+  box-shadow: 6px 6px 0px #000, 0 0 20px rgba(57, 255, 20, 0.3);
   display: flex;
   flex-direction: column;
-  height: 650px;
+  min-height: 640px;
+  max-height: 760px;
+  height: 100%;
   overflow: hidden;
 }
 
 .terminal-header {
   background-color: var(--arcade-green);
   color: #000;
-  padding: 8px 12px;
+  padding: 14px 18px;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 10px;
 }
 
 .terminal-title {
   font-family: var(--font-arcade);
-  font-size: 0.62rem;
+  font-size: 0.65rem;
   font-weight: bold;
   letter-spacing: 0.5px;
 }
@@ -389,16 +564,17 @@ button:disabled {
 .terminal-controls {
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 10px;
 }
 
 .terminal-tab-btn {
   background: #000;
   color: #94a3b8;
   border: 1px solid #334155;
-  padding: 2px 7px;
-  font-size: 0.55rem;
+  padding: 4px 10px;
+  font-size: 0.58rem;
   font-family: var(--font-arcade);
+  border-radius: 4px;
   box-shadow: none;
   width: auto;
   cursor: pointer;
@@ -427,9 +603,10 @@ button:disabled {
   background: #000;
   color: var(--arcade-green);
   border: 1px solid #334155;
-  padding: 2px 7px;
-  font-size: 0.55rem;
+  padding: 4px 10px;
+  font-size: 0.58rem;
   font-family: var(--font-arcade);
+  border-radius: 4px;
   box-shadow: none;
   width: auto;
   cursor: pointer;
@@ -441,16 +618,16 @@ button:disabled {
 }
 
 .terminal-body {
-  padding: 16px;
+  padding: 20px;
   font-family: var(--font-dos);
   font-size: 1.15rem;
   color: var(--dos-green);
-  line-height: 1.4;
+  line-height: 1.5;
   overflow-y: auto;
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
   text-shadow: 0 0 4px rgba(0, 255, 102, 0.6);
 }
 
@@ -459,18 +636,22 @@ button:disabled {
   text-shadow: 0 0 4px rgba(255, 49, 49, 0.6);
 }
 
+.event-entry, .error-entry {
+  padding: 12px 14px;
+  margin-bottom: 4px;
+  border-radius: 4px;
+  line-height: 1.5;
+  animation: scanFade 0.15s ease-in-out;
+}
+
 .event-entry {
   background: rgba(0, 255, 102, 0.05);
-  border-left: 3px solid var(--arcade-green);
-  padding: 6px 8px;
-  animation: scanFade 0.15s ease-in-out;
+  border-left: 4px solid var(--arcade-green);
 }
 
 .error-entry {
   background: rgba(255, 49, 49, 0.08);
-  border-left: 3px solid var(--arcade-red);
-  padding: 6px 8px;
-  animation: scanFade 0.15s ease-in-out;
+  border-left: 4px solid var(--arcade-red);
 }
 
 .error-title {
@@ -494,7 +675,7 @@ button:disabled {
   justify-content: space-between;
   font-size: 0.95rem;
   color: var(--arcade-cyan);
-  margin-bottom: 2px;
+  margin-bottom: 4px;
 }
 
 .event-name {
@@ -534,9 +715,10 @@ button:disabled {
 .modal-content {
   background: #0a0407;
   border: 6px solid var(--arcade-red);
-  box-shadow: 0 0 30px rgba(255, 49, 49, 0.8), inset 0 0 15px #000;
-  padding: 32px 24px;
-  max-width: 480px;
+  border-radius: 10px;
+  box-shadow: 0 0 35px rgba(255, 49, 49, 0.8), inset 0 0 20px #000;
+  padding: 36px 40px;
+  max-width: 520px;
   width: 90%;
   text-align: center;
   animation: modalDrop 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
@@ -557,12 +739,13 @@ button:disabled {
   color: var(--arcade-yellow);
   font-family: 'Press Start 2P', monospace;
   font-size: 0.58rem;
-  padding: 6px 10px;
+  padding: 8px 12px;
   border: 2px solid var(--arcade-yellow);
-  border-radius: 4px;
+  border-radius: 6px;
   cursor: pointer;
   box-shadow: 0 0 8px rgba(255, 230, 0, 0.4);
   transition: all 0.15s ease;
+  width: auto;
 }
 
 .marquee-mute-btn:hover {
@@ -577,26 +760,19 @@ button:disabled {
   box-shadow: none;
 }
 
-/* Interoperability Status Pill & Combo Streak Row */
-.interop-streak-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 12px;
-}
-
 /* Interoperability Status Pill */
 .api-status-pill {
   font-family: 'Press Start 2P', monospace;
   font-size: 0.58rem;
-  padding: 8px 12px;
-  border-radius: 4px;
+  padding: 8px 14px;
+  border-radius: 6px;
   cursor: pointer;
   background: rgba(0, 0, 0, 0.7);
   transition: all 0.2s ease;
   user-select: none;
   text-align: center;
+  width: auto;
+  box-shadow: none;
 }
 
 .api-status-pill.api-live {
@@ -625,9 +801,9 @@ button:disabled {
 /* Combo Streak Multiplier Badge */
 .streak-badge {
   font-family: 'Press Start 2P', monospace;
-  font-size: 0.6rem;
-  padding: 8px 12px;
-  border-radius: 4px;
+  font-size: 0.62rem;
+  padding: 10px 14px;
+  border-radius: 6px;
   background: rgba(0, 0, 0, 0.7);
   border: 2px solid #475569;
   color: #94a3b8;
@@ -740,10 +916,11 @@ body.no-scanlines {
 .settings-modal-content {
   background: #090c14;
   border: 4px solid var(--arcade-yellow);
-  box-shadow: 0 0 30px rgba(255, 230, 0, 0.6), inset 0 0 15px #000;
-  max-width: 540px;
-  width: 95%;
-  padding: 24px 20px;
+  border-radius: 10px;
+  box-shadow: 0 0 35px rgba(255, 230, 0, 0.6), inset 0 0 20px #000;
+  max-width: 520px;
+  width: 92%;
+  padding: 36px 40px;
   text-align: left;
 }
 
@@ -763,6 +940,7 @@ body.no-scanlines {
   padding: 0 4px;
   font-family: monospace;
   box-shadow: none;
+  width: auto;
 }
 
 .settings-close-x:hover {
@@ -774,7 +952,7 @@ body.no-scanlines {
 .settings-grid {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 18px;
 }
 
 .setting-item {
@@ -783,8 +961,8 @@ body.no-scanlines {
   align-items: center;
   background: #03070c;
   border: 2px solid #1e293b;
-  padding: 10px 14px;
-  border-radius: 4px;
+  padding: 14px 18px;
+  border-radius: 6px;
 }
 
 .setting-label {
@@ -798,7 +976,7 @@ body.no-scanlines {
 .setting-btn {
   font-family: 'Press Start 2P', monospace;
   font-size: 0.55rem;
-  padding: 6px 10px;
+  padding: 8px 12px;
   border-radius: 4px;
   background: #0f172a;
   border: 2px solid var(--arcade-cyan);
@@ -807,6 +985,8 @@ body.no-scanlines {
   transition: all 0.15s ease;
   min-width: 140px;
   text-align: center;
+  box-shadow: none;
+  width: auto;
 }
 
 .setting-btn:hover {
@@ -858,10 +1038,11 @@ body.no-scanlines {
   background: #0f172a;
   color: var(--arcade-green);
   border: 2px solid var(--arcade-green);
-  padding: 6px 8px;
+  padding: 8px 10px;
   outline: none;
   cursor: pointer;
-  max-width: 170px;
+  max-width: 180px;
+  border-radius: 4px;
 }
 
 .arcade-select option {
@@ -873,11 +1054,12 @@ body.no-scanlines {
 .settings-save-btn {
   width: 100%;
   font-family: 'Press Start 2P', monospace;
-  font-size: 0.72rem;
-  padding: 14px;
+  font-size: 0.76rem;
+  padding: 16px;
   background: linear-gradient(to bottom, #39ff14, #229910);
   color: #000;
   border: 3px solid #fff;
+  border-radius: 8px;
   cursor: pointer;
   box-shadow: 0 0 15px rgba(57, 255, 20, 0.6);
   transition: all 0.15s ease;

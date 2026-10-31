@@ -24,7 +24,7 @@
   <!-- 90s ARCADE TOP CABINET MARQUEE                       -->
   <!-- ==================================================== -->
   <header class="marquee-header">
-    <div class="marquee-stats">
+    <div class="marquee-stats-group">
       <div class="marquee-item">
         <span class="marquee-label">1UP</span>
         <span id="marquee-1up" class="marquee-val">0000</span>
@@ -37,12 +37,12 @@
         <span class="marquee-label blink-text">INSERT COIN</span>
         <span class="marquee-val" style="color: var(--arcade-green);">FREE PLAY</span>
       </div>
-      <div class="marquee-item" style="display: flex; gap: 6px;">
-        <button id="sfx-toggle-btn" class="marquee-mute-btn" type="button" title="Quick toggle 8-bit sound effects">[🔊 SFX: ON]</button>
-        <button id="settings-btn" class="marquee-mute-btn" type="button" title="Open Arcade System Dip Switches & Settings">[⚙️ SETTINGS]</button>
-      </div>
     </div>
     <div class="cabinet-title">★ BANANA QUEST ARCADE ★</div>
+    <div class="marquee-controls-group">
+      <button id="sfx-toggle-btn" class="marquee-mute-btn" type="button" title="Quick toggle 8-bit sound effects">[🔊 SFX: ON]</button>
+      <button id="settings-btn" class="marquee-mute-btn" type="button" title="Open Arcade System Dip Switches & Settings">[⚙️ SETTINGS]</button>
+    </div>
   </header>
 
   <!-- Two-Column Responsive Arcade Layout -->
@@ -71,7 +71,7 @@
         </div>
 
         <!-- 8-Bit Action Buttons -->
-        <div style="display: flex; gap: 12px; margin-top: 10px;">
+        <div class="auth-btn-row">
           <button id="login-btn">[ 1P LOGIN ]</button>
           <button id="register-btn">[ NEW REGISTER ]</button>
         </div>
@@ -89,8 +89,8 @@
         <button id="start-game-btn">🕹️ START ARCADE MODE</button>
 
         <!-- 90s Hall of Fame Top 5 High Scores Table -->
-        <div style="margin-top: 24px;">
-          <h3 style="font-size: 0.72rem; color: var(--arcade-yellow); margin-bottom: 8px; text-transform: uppercase;">
+        <div class="leaderboard-section-wrapper">
+          <h3 class="leaderboard-title">
             🏆 HALL OF FAME // TOP 5 (SQLITE DB)
           </h3>
           <div class="leaderboard-cabinet">
@@ -100,38 +100,35 @@
               <span>HIGH SCORE</span>
             </div>
             <div id="leaderboard-list">
-              <div style="text-align: center; color: #64748b; font-size: 0.65rem; padding: 10px;">LOADING SCORES...
+              <div style="text-align: center; color: #64748b; font-size: 0.65rem; padding: 14px;">LOADING SCORES...
               </div>
             </div>
           </div>
         </div>
 
         <!-- Main Menu Logout -->
-        <button id="dash-logout-btn" class="danger-btn" style="margin-top: 20px;">⚡ LOG OUT</button>
+        <button id="dash-logout-btn" class="danger-btn">⚡ LOG OUT</button>
       </section>
 
       <!-- SECTION 3: ARCADE GAMEPLAY, KEYPAD & PUZZLE CHALLENGE -->
       <section id="game-section" class="card hidden">
-        <h2>=== PUZZLE CHALLENGE ===</h2>
-        <p class="subtitle">PLAYER: <span id="current-user" class="badge-user"></span></p>
-
-        <!-- INTEROPERABILITY HEALTH PILL & COMBO STREAK ROW -->
-        <div class="interop-streak-row">
+        <!-- Top Header Row: Title, Player Badge & API Status Pill -->
+        <div class="challenge-header-row">
+          <div class="challenge-title-group">
+            <h2>=== PUZZLE CHALLENGE ===</h2>
+            <p class="subtitle" style="margin-bottom: 0;">PLAYER: <span id="current-user" class="badge-user"></span></p>
+          </div>
           <button id="api-status-pill" class="api-status-pill api-live" type="button" title="Click or press 'F' key to toggle simulated API outage">
             [ 🟢 LIVE API (CLICK TO TEST OFFLINE MODE) ]
           </button>
-          <div id="streak-display" class="streak-badge">
-            STREAK: 0X
-          </div>
         </div>
 
-        <!-- THEME 3: HUD HEADER (SCORE, TIMER & LIVES SYSTEM) -->
+        <!-- Unified 4-Stat HUD Grid (Score, Timer, Lives, Streak) -->
         <div class="hud-grid">
-          <div id="score-display" class="timer-badge"
-            style="flex: 1; border-color: var(--arcade-yellow); color: var(--arcade-yellow);">SCORE: 0000</div>
-          <div id="timer-display" class="timer-badge" style="flex: 1;">TIME: 45s</div>
-          <div id="lives-display" class="timer-badge"
-            style="flex: 1; border-color: var(--arcade-pink); color: var(--arcade-pink);">LIVES: ❤️❤️❤️</div>
+          <div id="score-display" class="timer-badge hud-score">SCORE: 0000</div>
+          <div id="timer-display" class="timer-badge hud-timer">TIME: 45s</div>
+          <div id="lives-display" class="timer-badge hud-lives">LIVES: ❤️❤️❤️</div>
+          <div id="streak-display" class="timer-badge streak-badge hud-streak">STREAK: 0X</div>
         </div>
 
         <!-- Floating Points Popup Container -->
@@ -140,17 +137,19 @@
         <!-- THEME 2: 3RD-PARTY PUZZLE IMAGE (MARC CONRAD REST API) -->
         <img id="puzzle-img" src="" alt="Arcade Banana Math Puzzle" class="hidden">
 
-        <!-- Button to fetch next puzzle manually if needed -->
-        <button id="fetch-puzzle-btn">[ NEXT PUZZLE ]</button>
+        <!-- Fixed-Height Feedback Banner (Directly Below Puzzle) -->
+        <div id="message-box"></div>
 
         <!-- TACTILE 0-9 ARCADE BUTTON KEYPAD CONTAINER -->
-        <div id="guess-container" class="hidden" style="margin-top: 18px;">
-          <div class="form-group" style="margin-bottom: 8px;">
-            <label for="guess-input">&gt; ENTER SOLUTION (CLICK KEYPAD OR TYPE 0-9):</label>
-            <input type="text" id="guess-input" inputmode="numeric" pattern="[0-9]" maxlength="1" placeholder="PRESS 0-9 KEY">
+        <div id="guess-container" class="hidden">
+          <!-- Visually Hidden Inputs (Maintained for app.js keyboard & form compatibility) -->
+          <div class="visually-hidden-inputs">
+            <label for="guess-input">&gt; ENTER SOLUTION:</label>
+            <input type="text" id="guess-input" inputmode="numeric" pattern="[0-9]" maxlength="1" placeholder="0-9">
+            <button id="submit-guess-btn">[ FIRE ANSWER ]</button>
           </div>
 
-          <!-- Chunky 0-9 Arcade Push Buttons -->
+          <!-- Chunky 0-9 Arcade Push Buttons (Spacious 5x2 Grid) -->
           <div class="arcade-keypad">
             <button type="button" class="keypad-btn" data-val="1">1</button>
             <button type="button" class="keypad-btn" data-val="2">2</button>
@@ -163,19 +162,13 @@
             <button type="button" class="keypad-btn" data-val="9">9</button>
             <button type="button" class="keypad-btn" data-val="0">0</button>
           </div>
-
-          <button id="submit-guess-btn"
-            style="margin-top: 10px; background: linear-gradient(to bottom, #ffe600, #d4ac0d); color: #000;">[ FIRE
-            ANSWER ]</button>
         </div>
 
-        <!-- Gameplay result feedback box -->
-        <div id="message-box"></div>
-
-        <!-- Navigation Buttons -->
-        <div style="display: flex; gap: 10px; margin-top: 16px;">
-          <button id="back-to-dash-btn" style="flex: 1; background: #334155; color: #fff;">🔙 MAIN MENU</button>
-          <button id="logout-btn" class="danger-btn" style="flex: 1;">⚡ LOG OUT</button>
+        <!-- Clean 3-Column Bottom Utility Bar -->
+        <div class="game-bottom-nav">
+          <button id="fetch-puzzle-btn">[ NEXT PUZZLE ]</button>
+          <button id="back-to-dash-btn" style="background: #334155; color: #fff;">🔙 MAIN MENU</button>
+          <button id="logout-btn" class="danger-btn">⚡ LOG OUT</button>
         </div>
       </section>
 
