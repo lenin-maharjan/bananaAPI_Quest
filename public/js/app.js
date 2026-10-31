@@ -367,8 +367,8 @@ function applySettingsToUI() {
   if (apiStatusPill) {
     apiStatusPill.className = simulateOutage ? 'api-status-pill api-fallback' : 'api-status-pill api-live';
     apiStatusPill.textContent = simulateOutage 
-      ? '[🟠 API: OFFLINE BACKUP MODE (CLICK FOR LIVE)]' 
-      : '[🟢 API: ONLINE (CLICK TO SIMULATE OUTAGE)]';
+      ? '[ 🟠 OFFLINE CACHE (AUTO-RECOVERING) ]' 
+      : '[ 🟢 LIVE API (CLICK TO TEST OFFLINE MODE) ]';
   }
 }
 
@@ -687,10 +687,10 @@ window.addEventListener('puzzle-loaded', (event) => {
   if (apiStatusPill) {
     if (event.detail.source === 'FALLBACK_CACHE') {
       apiStatusPill.className = 'api-status-pill api-fallback';
-      apiStatusPill.textContent = '[🟠 API: OFFLINE BACKUP MODE (CLICK FOR LIVE)]';
+      apiStatusPill.textContent = '[ 🟠 OFFLINE CACHE (AUTO-RECOVERING) ]';
     } else {
       apiStatusPill.className = 'api-status-pill api-live';
-      apiStatusPill.textContent = '[🟢 API: ONLINE (CLICK TO SIMULATE OUTAGE)]';
+      apiStatusPill.textContent = '[ 🟢 LIVE API (CLICK TO TEST OFFLINE MODE) ]';
     }
   }
 

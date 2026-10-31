@@ -97,12 +97,12 @@
 >    - To deliver an authentic instantaneous arcade experience, [`bananaController.js`](file:///c:/Users/lenin/OneDrive/Documents/what%20L6/Software%20Enterprise/bananaAPI_Quest/src/controllers/bananaController.js) implements an in-memory Producer-Consumer pre-fetch queue (`puzzlePool = []`, target size: 3).
 >    - An asynchronous background worker (`refillPuzzlePool`) automatically maintains a buffer of ready-to-solve puzzles. When a client requests a puzzle, it is popped from the pool in `< 5ms`, while `refillPuzzlePool()` is triggered asynchronously in the background (non-blocking).
 >    - Furthermore, the backend provides `nextQuestionHint` containing the upcoming puzzle's image URL. The frontend browser pre-caches this image in the background (`new Image().src = data.nextQuestionHint`), ensuring next-round puzzles render without graphic decoding delays.
-> 4. **Fault-Tolerant Fallback Cache (Graceful Degradation):**
->    - In enterprise environments, external services may suffer from latency, rate limits, or network partitions.
+> 4. **Fault-Tolerant Fallback Cache Bank (10+ Diverse Puzzles):**
+>    - In enterprise environments, external services may suffer from latency, rate limits, or network partitions (`ENOTFOUND`, `ETIMEDOUT`, `ECONNREFUSED`).
 >    - To guarantee High Availability, all external fetches are guarded by an `AbortSignal.timeout(2500)` barrier.
->    - If the remote API times out or fails, execution diverts to the `catch` block. The controller seamlessly serves a local hardcoded fallback puzzle ([`FALLBACK_PUZZLE`](file:///c:/Users/lenin/OneDrive/Documents/what%20L6/Software%20Enterprise/bananaAPI_Quest/src/controllers/bananaController.js)), saves the fallback solution into the session, and responds with `{ question: FALLBACK_PUZZLE.question, source: 'FALLBACK_CACHE', prefetched: false }`.
-> 5. **Live Outage Demonstration Feature:**
->    - To allow academic examiners to verify graceful degradation live on camera, `getPuzzle` inspects `req.query.simulateOutage`. When `simulateOutage === 'true'`, it immediately serves the fallback cache and renders `[🟠 API: FALLBACK CACHE]` on the HUD without requiring a physical network disconnection."
+>    - If the remote API times out or fails, execution diverts to the `catch` block. Rather than a single static puzzle, the controller rotates through an offline bank of **12 diverse puzzles (`FALLBACK_PUZZLES`)** covering solutions 0 through 9, sets `req.session.solution`, and delivers `{ question, source: 'FALLBACK_CACHE', prefetched: false, nextQuestionHint: ... }`, providing continuous, varied offline gameplay.
+> 5. **Live Outage Demonstration & Auto-Recovery Labels:**
+>    - To allow academic examiners to verify graceful degradation live on camera, `getPuzzle` inspects `req.query.simulateOutage`. When `simulateOutage === 'true'`, it immediately serves the fallback cache and updates the HUD status pill to `[ 🟠 OFFLINE CACHE (AUTO-RECOVERING) ]`. In live mode, it displays `[ 🟢 LIVE API (CLICK TO TEST OFFLINE MODE) ]`."
 
 ---
 
@@ -142,13 +142,13 @@
 > "**Implemented Distinctive Features:**
 > 1. **90s System DIP Switches & Settings Modal:** Authentic 90s arcade cabinets contained physical DIP switches on the motherboard for operators to configure difficulty and audio. We recreated this in `#settings-modal` with 6 interactive hardware DIP switches: SFX toggle, 0–100% master volume slider, selectable timer difficulty (EASY 60s, NORMAL 45s, HARD 20s), CRT scanlines toggle, camera shake / VFX toggle, and interoperability mode toggle. Settings persist across reloads via `localStorage` and broadcast changes over the MS-DOS event bus.
 > 2. **Web Audio API 8-Bit Synthesizer & Master Gain Control:** Rather than downloading static audio files, [`public/js/app.js`](file:///c:/Users/lenin/OneDrive/Documents/what%20L6/Software%20Enterprise/bananaAPI_Quest/public/js/app.js) synthesizes square, triangle, and sawtooth waves in real time through an `AudioContext` and centralized `masterGainNode`. Volume is dynamically modulated from 0% to 100% via the settings modal.
-> 3. **Instant Pre-Fetch Pool & Image Loading Timer Synchronization:** Puzzles are served in `< 5ms` from an in-memory queue, next round assets are preloaded via `new Image().src = data.nextQuestionHint`, and the round timer is paused with `"⏳ DECODING PUZZLE ASSET..."` until `puzzleImg.onload` fires, guaranteeing players never lose seconds waiting for graphics to render.
+> 3. **Instant Pre-Fetch Pool & Non-Blocking Image Loading:** Puzzles are served in `< 5ms` from an in-memory buffer, while subsequent rounds are replenished asynchronously in the background. The answering UI immediately unlocks without blocking on image downloads, keeping round gameplay completely fluid.
 > 4. **Camera Shake, CRT Damage Flash & Green Victory Pulse:** Incorrect guesses trigger a CSS camera shake and red CRT vignette flash; correct guesses produce a neon green pulse and a floating "+PTS" score animation.
 > 5. **Combo Streak Multipliers:** Consecutive correct answers award escalating combo bonuses (`x1`, `x2`, `x3 ON FIRE!`) with bonus points (`+50 * combo`) and an animated fire-glow HUD badge.
 > 6. **Panic Mode (< 10 Seconds):** When timer drops below 10 seconds, the badge flashes neon red (`.panic-pulse`) and the synth emits urgent, high-pitched countdown warning ticks.
-> 7. **Live Interoperability Status Pill + Outage Toggle:** A real-time badge in the HUD displays `[🟢 API: LIVE]` vs `[🟠 API: FALLBACK]`. Clicking it or pressing the 'F' hotkey simulates an API outage on demand for live examiner demonstration.
+> 7. **Live Interoperability Status Pill + Outage Toggle:** A real-time badge in the HUD displays `[ 🟢 LIVE API (CLICK TO TEST OFFLINE MODE) ]` vs `[ 🟠 OFFLINE CACHE (AUTO-RECOVERING) ]`. Clicking it or pressing the 'F' hotkey simulates an API outage on demand for live examiner demonstration.
 > 8. **Persistent SQLite High Score Leaderboard:** A dedicated `scores` table stores player achievements. The controller executes an aggregate SQL query (`SELECT username, MAX(score) AS high_score FROM scores GROUP BY username ORDER BY high_score DESC LIMIT 5`) and renders the Hall of Fame on the dashboard.
-> 9. **Dual Input:** On-screen 0–9 keypad for touch/mouse plus physical keyboard number support.
+> 9. **Dual Input:** On-screen 0–9 keypad for touch/mouse plus physical keyboard number support with single-digit enforcement.
 >
 > **Future Development Roadmap (Post-Week 8 Enterprise Expansion):**
 > 1. **Real-Time Multiplayer with WebSockets (`Socket.io`):** Introduce head-to-head multiplayer arcade battles where two authenticated players race against the clock to solve the same banana puzzle simultaneously.
@@ -253,10 +253,11 @@ graph TD
   - `exports.logout`: Calls `req.session.destroy()` and clears client-side cookie `connect.sid` ([`L112-L120`](file:///c:/Users/lenin/OneDrive/Documents/what%20L6/Software%20Enterprise/bananaAPI_Quest/src/controllers/authController.js#L112-L120)).
 
 #### 4. [`src/controllers/bananaController.js`](file:///c:/Users/lenin/OneDrive/Documents/what%20L6/Software%20Enterprise/bananaAPI_Quest/src/controllers/bananaController.js) — Game & Interoperability Logic
-- **Role:** Handles external API consumption, Producer-Consumer puzzle buffer queue, puzzle validation, and score records.
+- **Role:** Handles external API consumption, Producer-Consumer puzzle buffer queue, 10+ offline puzzle bank, puzzle validation, and score records.
 - **Key Methods & Buffers:**
   - `puzzlePool = []` & `refillPuzzlePool`: In-memory pre-fetch buffer (target size: 3) populated asynchronously in the background with a 2500ms timeout barrier.
-  - `exports.getPuzzle`: Immediately shifts a puzzle from `puzzlePool` in `< 5ms`, sets `req.session.solution`, triggers non-blocking background refill, and returns `{ question, source: 'LIVE_MARCCONRAD', prefetched: true, nextQuestionHint: ... }`. If `?simulateOutage=true` is present, instantly engages `FALLBACK_PUZZLE` with `source: 'FALLBACK_CACHE'`.
+  - `FALLBACK_PUZZLES = [...]`: Diverse bank of 12 verified offline puzzles with solutions spanning digits 0 through 9, rotating sequentially via `getNextFallbackPuzzle()`.
+  - `exports.getPuzzle`: Immediately shifts a puzzle from `puzzlePool` in `< 5ms`, sets `req.session.solution`, triggers non-blocking background refill, and returns `{ question, source: 'LIVE_MARCCONRAD', prefetched: true, nextQuestionHint: ... }`. If `?simulateOutage=true` or upstream network failure occurs, instantly engages `FALLBACK_PUZZLES` with `source: 'FALLBACK_CACHE'`.
   - `exports.checkAnswer`: Evaluates player's guess against session-bound solution; includes guard checking `solution === undefined` returning HTTP 400 Bad Request if no puzzle is active.
   - `exports.saveScore`: Parameterized `INSERT INTO scores (username, score) VALUES (?, ?)` extracting username securely from session and enforcing non-negative scores.
   - `exports.getLeaderboard`: Executes aggregate SQL `SELECT username, MAX(score) AS high_score FROM scores GROUP BY username ORDER BY high_score DESC LIMIT 5`.
@@ -342,11 +343,11 @@ Use this timeline to ensure you hit every criterion on the marking rubric during
 - *"For interoperability, we consume Marc Conrad's Banana REST API over HTTPS."*
 - Open [`src/controllers/bananaController.js`](file:///c:/Users/lenin/OneDrive/Documents/what%20L6/Software%20Enterprise/bananaAPI_Quest/src/controllers/bananaController.js):
   - Point to `fetch(apiUrl)`: *"Notice we employ a server-side reverse proxy pattern. The client browser never contacts the third-party API directly. This resolves CORS issues and hides the answer from browser DevTools by storing the solution strictly in `req.session.solution`."*
-  - Point to `puzzlePool = []` and `refillPuzzlePool`: *"To eliminate external network latency (400ms–2,500ms), we built an asynchronous Producer-Consumer pre-fetch queue. Puzzles are served instantly from the pool in under 5 milliseconds (`prefetched: true`), while subsequent rounds are refilled in the background non-blocking. The frontend also pre-caches upcoming puzzle images via `nextQuestionHint` and pauses the timer until `puzzleImg.onload` confirms the asset has loaded."*
-  - Point to `FALLBACK_PUZZLE`: *"To achieve enterprise fault tolerance, we guard calls with a 2,500ms timeout and a pre-cached fallback puzzle. If the upstream server is offline, our application degrades gracefully."*
+  - Point to `puzzlePool = []` and `refillPuzzlePool`: *"To eliminate external network latency (400ms–2,500ms), we built an asynchronous Producer-Consumer pre-fetch queue. Puzzles are served instantly from the pool in under 5 milliseconds (`prefetched: true`), while subsequent rounds are refilled in the background non-blocking. The frontend also pre-caches upcoming puzzle images via `nextQuestionHint` and the game loop unlocks immediately without waiting on slow image decodes."*
+  - Point to `FALLBACK_PUZZLES`: *"To achieve enterprise fault tolerance, we built an offline bank of 12 diverse puzzles covering solutions 0 through 9. If the upstream server is offline or times out after 2,500ms, our application degrades gracefully with sequential round-robin rotation so players receive a fresh challenge every round."*
   - **Live Camera Demonstration of Outage Simulation:**
-    - Switch to browser: show the `[🟢 API: BUFFER (FAST)]` pill.
-    - Click the pill or press the **`F` key**: watch the pill switch to `[🟠 API: FALLBACK CACHE]`, the MS-DOS terminal log `interop-mode-changed`, and a cached puzzle load seamlessly!
+    - Switch to browser: show the `[ 🟢 LIVE API (CLICK TO TEST OFFLINE MODE) ]` pill.
+    - Click the pill or press the **`F` key**: watch the pill switch to `[ 🟠 OFFLINE CACHE (AUTO-RECOVERING) ]`, the MS-DOS terminal log `interop-mode-changed`, and a diverse cached puzzle load seamlessly!
     - *"As you can see, our application continues without crashing, demonstrating 100% High Availability."*
 
 #### [5:15 - 7:30] Event-Driven Architecture & Web Audio Synthesizer (Theme 3)
