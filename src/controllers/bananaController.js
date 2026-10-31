@@ -9,7 +9,7 @@ const db = require('../models/db');
 
 // Diverse offline fallback cache bank (12 unique puzzles covering solutions 0 through 9)
 // Guarantees High Availability and zero downtime during network partitions (ENOTFOUND, ETIMEDOUT, ECONNREFUSED)
-const FALLBACK_PUZZLES = [
+const FALLBACK_PUZZLE_BANK = [
   { question: 'https://www.sanfoh.com/uob/banana/data/tc9d31fc3a6ac1a87f124facb33n70.png', solution: 0 },
   { question: 'https://www.sanfoh.com/uob/banana/data/te7e5f16c26bea6df6f2379a7e7n31.png', solution: 1 },
   { question: 'https://www.sanfoh.com/uob/banana/data/tf30437c602f833b676c95503e6n122.png', solution: 2 },
@@ -24,11 +24,14 @@ const FALLBACK_PUZZLES = [
   { question: 'https://www.sanfoh.com/uob/banana/data/tf5ee98cd2d0f07cf40ebb965d2n103.png', solution: 3 }
 ];
 
-let fallbackIndex = 0;
-function getNextFallbackPuzzle() {
-  const puzzle = FALLBACK_PUZZLES[fallbackIndex % FALLBACK_PUZZLES.length];
-  fallbackIndex++;
-  return puzzle;
+let lastFallbackIndex = -1;
+function getRandomFallbackPuzzle() {
+  let nextIndex;
+  do {
+    nextIndex = Math.floor(Math.random() * FALLBACK_PUZZLE_BANK.length);
+  } while (FALLBACK_PUZZLE_BANK.length > 1 && nextIndex === lastFallbackIndex);
+  lastFallbackIndex = nextIndex;
+  return FALLBACK_PUZZLE_BANK[nextIndex];
 }
 
 // ====================================================
@@ -71,9 +74,9 @@ exports.getPuzzle = async (req, res) => {
   try {
     // 1. Simulated Outage Demonstration
     if (req.query.simulateOutage === 'true') {
-      const fallback = getNextFallbackPuzzle();
+      const fallback = getRandomFallbackPuzzle();
       req.session.solution = fallback.solution;
-      const nextHint = FALLBACK_PUZZLES[fallbackIndex % FALLBACK_PUZZLES.length].question;
+      const nextHint = FALLBACK_PUZZLE_BANK[(lastFallbackIndex + 1) % FALLBACK_PUZZLE_BANK.length].question;
       return res.json({
         question: fallback.question,
         source: 'FALLBACK_CACHE',
@@ -121,12 +124,12 @@ exports.getPuzzle = async (req, res) => {
 
   } catch (error) {
     // GRACEFUL DEGRADATION: Log external network failure to server console
-    console.warn('⚠️ External API unavailable. Engaging fault-tolerant fallback cache bank:', error.message);
+    console.warn('⚠️ Live API unreachable. Automatically engaging 10+ puzzle fallback bank...', error.message || error);
 
     // Bind fallback solution into user's session so game remains fully playable
-    const fallback = getNextFallbackPuzzle();
+    const fallback = getRandomFallbackPuzzle();
     req.session.solution = fallback.solution;
-    const nextHint = FALLBACK_PUZZLES[fallbackIndex % FALLBACK_PUZZLES.length].question;
+    const nextHint = FALLBACK_PUZZLE_BANK[(lastFallbackIndex + 1) % FALLBACK_PUZZLE_BANK.length].question;
     refillPuzzlePool();
 
     return res.json({
@@ -220,3 +223,6 @@ exports.getLeaderboard = (req, res) => {
     return res.json({ success: true, leaderboard: rows });
   });
 };
+
+// Export fallback bank for verification and testing
+exports.FALLBACK_PUZZLE_BANK = FALLBACK_PUZZLE_BANK;
