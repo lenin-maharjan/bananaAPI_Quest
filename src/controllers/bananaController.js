@@ -15,36 +15,90 @@ const FALLBACK_PUZZLE = {
   solution: 5
 };
 
-// Controller method to fetch puzzle from Marc Conrad's external API with fallback resilience
+// ====================================================
+// PRODUCER-CONSUMER PRE-FETCH QUEUE (INSTANT PUZZLES)
+// ====================================================
+const TARGET_POOL_SIZE = 3;
+const puzzlePool = [];
+let isRefilling = false;
+
+// Asynchronous background worker to maintain a buffer of pre-fetched puzzles
+async function refillPuzzlePool() {
+  if (isRefilling || puzzlePool.length >= TARGET_POOL_SIZE) {
+    return;
+  }
+  isRefilling = true;
+
+  while (puzzlePool.length < TARGET_POOL_SIZE) {
+    try {
+      const apiUrl = 'https://marcconrad.com/uob/banana/api.php?out=json';
+      const response = await fetch(apiUrl, { signal: AbortSignal.timeout(2500) });
+      if (!response.ok) break;
+      const data = await response.json();
+      if (data && data.question && data.solution !== undefined) {
+        puzzlePool.push({ question: data.question, solution: data.solution });
+      }
+    } catch (err) {
+      // If external network fails or times out, stop gracefully without crashing
+      break;
+    }
+  }
+
+  isRefilling = false;
+}
+
+// Initial background fill on controller initialization
+refillPuzzlePool();
+
+// Controller method to fetch puzzle with pre-fetch queue & fallback resilience
 exports.getPuzzle = async (req, res) => {
   try {
-    // Check if client requested a simulated outage for presentation demonstration
+    // 1. Simulated Outage Demonstration
     if (req.query.simulateOutage === 'true') {
-      throw new Error('Simulated external API outage for demonstration');
+      req.session.solution = FALLBACK_PUZZLE.solution;
+      return res.json({
+        question: FALLBACK_PUZZLE.question,
+        source: 'FALLBACK_CACHE',
+        prefetched: false,
+        nextQuestionHint: null
+      });
     }
 
-    // External REST API endpoint URL provided by Marc Conrad
+    // 2. Instant Pre-Fetch Pool Consumption (< 5ms response time)
+    if (puzzlePool.length > 0) {
+      const puzzle = puzzlePool.shift();
+      req.session.solution = puzzle.solution;
+
+      // Asynchronously refill the pool in background (non-blocking)
+      refillPuzzlePool();
+
+      return res.json({
+        question: puzzle.question,
+        source: 'LIVE_MARCCONRAD',
+        prefetched: true,
+        nextQuestionHint: puzzlePool[0]?.question || null
+      });
+    }
+
+    // 3. Pool Empty: Fetch Live with 2500ms Timeout
     const apiUrl = 'https://marcconrad.com/uob/banana/api.php?out=json';
+    const response = await fetch(apiUrl, { signal: AbortSignal.timeout(2500) });
 
-    // Interoperate with external service with a 5000ms (5 second) network timeout guard
-    const response = await fetch(apiUrl, { signal: AbortSignal.timeout(5000) });
-
-    // Validate if HTTP response status indicates success (status code 200-299)
     if (!response.ok) {
-      // Trigger error to divert execution into fallback catch block
       throw new Error(`External API returned non-200 HTTP status: ${response.status}`);
     }
 
-    // Parse the received JSON response payload from the remote server
     const data = await response.json();
-
-    // Store correct answer into server-side session to secure against client manipulation
     req.session.solution = data.solution;
 
-    // Send puzzle image question URL and source provenance to client without exposing solution
+    // Trigger background refill for subsequent rounds
+    refillPuzzlePool();
+
     return res.json({
       question: data.question,
-      source: 'LIVE_MARCCONRAD'
+      source: 'LIVE_MARCCONRAD',
+      prefetched: false,
+      nextQuestionHint: puzzlePool[0]?.question || null
     });
 
   } catch (error) {
@@ -53,11 +107,13 @@ exports.getPuzzle = async (req, res) => {
 
     // Bind fallback solution into user's session so game remains fully playable
     req.session.solution = FALLBACK_PUZZLE.solution;
+    refillPuzzlePool();
 
-    // Respond to frontend with identical contract structure and fallback source indicator
     return res.json({
       question: FALLBACK_PUZZLE.question,
-      source: 'FALLBACK_CACHE'
+      source: 'FALLBACK_CACHE',
+      prefetched: false,
+      nextQuestionHint: null
     });
   }
 };

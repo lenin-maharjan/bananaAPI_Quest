@@ -37,8 +37,9 @@
         <span class="marquee-label blink-text">INSERT COIN</span>
         <span class="marquee-val" style="color: var(--arcade-green);">FREE PLAY</span>
       </div>
-      <div class="marquee-item">
-        <button id="sfx-toggle-btn" class="marquee-mute-btn" type="button" title="Toggle 8-bit sound effects">[🔊 SFX: ON]</button>
+      <div class="marquee-item" style="display: flex; gap: 6px;">
+        <button id="sfx-toggle-btn" class="marquee-mute-btn" type="button" title="Quick toggle 8-bit sound effects">[🔊 SFX: ON]</button>
+        <button id="settings-btn" class="marquee-mute-btn" type="button" title="Open Arcade System Dip Switches & Settings">[⚙️ SETTINGS]</button>
       </div>
     </div>
     <div class="cabinet-title">★ BANANA QUEST ARCADE ★</div>
@@ -226,6 +227,71 @@
         </button>
         <button id="modal-menu-btn" style="background: linear-gradient(to bottom, #00f0ff, #0088aa); color: #000;">
           [ 🚪 EXIT TO LOBBY ]
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================================================== -->
+  <!-- 90s SYSTEM DIP SWITCHES // ARCADE SETTINGS MODAL     -->
+  <!-- ==================================================== -->
+  <div id="settings-modal" class="modal hidden">
+    <div class="modal-content settings-modal-content">
+      <div class="settings-modal-header">
+        <h2 style="color: var(--arcade-yellow); font-size: 0.95rem; letter-spacing: 1.5px; margin: 0;">
+          ⚙️ SYSTEM DIP SWITCHES // CONFIG
+        </h2>
+        <button id="settings-close-x" class="settings-close-x" type="button" title="Close Settings">&times;</button>
+      </div>
+      <p style="font-size: 0.65rem; color: #94a3b8; margin-top: 6px; margin-bottom: 18px; letter-spacing: 1px;">
+        PERSISTENT HARDWARE PREFERENCES (LOCALSTORAGE)
+      </p>
+
+      <div class="settings-grid">
+        <!-- 1. Sound Effects Toggle -->
+        <div class="setting-item">
+          <label class="setting-label">1. AUDIO HARDWARE (SFX):</label>
+          <button id="setting-sfx-toggle" class="setting-btn" type="button">[ 🔊 SFX: ON ]</button>
+        </div>
+
+        <!-- 2. Master Volume Slider -->
+        <div class="setting-item">
+          <label class="setting-label" for="setting-volume-slider">2. MASTER VOLUME: <span id="setting-volume-val">80%</span></label>
+          <input type="range" id="setting-volume-slider" min="0" max="100" value="80" class="arcade-slider">
+        </div>
+
+        <!-- 3. Timer Difficulty -->
+        <div class="setting-item">
+          <label class="setting-label" for="setting-difficulty-select">3. TIMER DIFFICULTY:</label>
+          <select id="setting-difficulty-select" class="arcade-select">
+            <option value="60">EASY (60 SECONDS)</option>
+            <option value="45" selected>NORMAL (45 SECONDS)</option>
+            <option value="20">HARD (20 SECONDS)</option>
+          </select>
+        </div>
+
+        <!-- 4. CRT Scanline Filter -->
+        <div class="setting-item">
+          <label class="setting-label">4. CRT MONITOR SCANLINES:</label>
+          <button id="setting-crt-toggle" class="setting-btn" type="button">[ 📺 CRT: ON ]</button>
+        </div>
+
+        <!-- 5. Screen Shake / Damage VFX -->
+        <div class="setting-item">
+          <label class="setting-label">5. CAMERA SHAKE / VFX:</label>
+          <button id="setting-vfx-toggle" class="setting-btn" type="button">[ 💥 VFX: ON ]</button>
+        </div>
+
+        <!-- 6. Interoperability API Simulation Outage -->
+        <div class="setting-item">
+          <label class="setting-label">6. INTEROP API MODE:</label>
+          <button id="setting-api-toggle" class="setting-btn" type="button">[ 🟢 LIVE MARCCONRAD ]</button>
+        </div>
+      </div>
+
+      <div style="margin-top: 22px;">
+        <button id="settings-save-btn" class="settings-save-btn" type="button">
+          [ 💾 SAVE &amp; CLOSE ]
         </button>
       </div>
     </div>

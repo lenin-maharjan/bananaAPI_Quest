@@ -44,9 +44,22 @@ const keypadButtons = document.querySelectorAll('.keypad-btn');
 
 // Cache Game Juice & Presentation Elements
 const sfxToggleBtn = document.getElementById('sfx-toggle-btn');
+const settingsBtn = document.getElementById('settings-btn');
 const apiStatusPill = document.getElementById('api-status-pill');
 const streakDisplay = document.getElementById('streak-display');
 const floatingScoreContainer = document.getElementById('floating-score-container');
+
+// Cache Settings DIP Switches Modal Elements
+const settingsModal = document.getElementById('settings-modal');
+const settingsCloseX = document.getElementById('settings-close-x');
+const settingSfxToggle = document.getElementById('setting-sfx-toggle');
+const settingVolumeSlider = document.getElementById('setting-volume-slider');
+const settingVolumeVal = document.getElementById('setting-volume-val');
+const settingDifficultySelect = document.getElementById('setting-difficulty-select');
+const settingCrtToggle = document.getElementById('setting-crt-toggle');
+const settingVfxToggle = document.getElementById('setting-vfx-toggle');
+const settingApiToggle = document.getElementById('setting-api-toggle');
+const settingsSaveBtn = document.getElementById('settings-save-btn');
 
 // Cache Game Over Modal elements
 const gameOverModal = document.getElementById('game-over-modal');
@@ -71,28 +84,45 @@ let isMuted = false;
 let simulateOutage = false;
 let currentStreak = 0;
 
-// AudioContext instance for real-time 8-bit sound synthesis
+// Persistent Settings State Object (Localstorage)
+const DEFAULT_SETTINGS = {
+  sfxEnabled: true,
+  volume: 80,
+  timerDifficulty: 45,
+  crtEnabled: true,
+  vfxEnabled: true,
+  simulateOutage: false
+};
+let currentSettings = { ...DEFAULT_SETTINGS };
+
+// AudioContext & Master Gain Node instance for real-time 8-bit sound synthesis
 let audioCtx = null;
+let masterGainNode = null;
+
+function ensureAudioContext() {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    masterGainNode = audioCtx.createGain();
+    masterGainNode.connect(audioCtx.destination);
+  }
+  if (audioCtx.state === 'suspended') {
+    audioCtx.resume();
+  }
+  const vol = (currentSettings.volume / 100);
+  masterGainNode.gain.setValueAtTime(vol, audioCtx.currentTime);
+}
 
 // ====================================================
 // WEB AUDIO API: 8-BIT ARCADE SOUND SYNTHESIZER
 // ====================================================
 
-// Function to synthesize vintage 8-bit arcade beeps without external sound files
+// Function to synthesize vintage 8-bit arcade beeps with master volume control
 function playArcadeSound(type) {
-  // If player toggled SFX mute, silence synthesizer immediately
-  if (isMuted) return;
+  // If player toggled SFX mute or disabled SFX in settings, silence immediately
+  if (isMuted || !currentSettings.sfxEnabled) return;
 
   try {
-    // Lazily initialize browser AudioContext on first user interaction
-    if (!audioCtx) {
-      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    }
-    // Resume context if browser suspended it due to autoplay policy
-    if (audioCtx.state === 'suspended') {
-      audioCtx.resume();
-    }
-
+    ensureAudioContext();
     const now = audioCtx.currentTime;
 
     // TYPE 1: CLICK / TACTILE KEYPAD BUTTON
@@ -105,7 +135,7 @@ function playArcadeSound(type) {
       gain.gain.setValueAtTime(0.1, now);
       gain.gain.linearRampToValueAtTime(0.01, now + 0.04);
       osc.connect(gain);
-      gain.connect(audioCtx.destination);
+      gain.connect(masterGainNode);
       osc.start(now);
       osc.stop(now + 0.04);
     }
@@ -123,7 +153,7 @@ function playArcadeSound(type) {
       gain.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
       osc1.connect(gain);
       osc2.connect(gain);
-      gain.connect(audioCtx.destination);
+      gain.connect(masterGainNode);
       osc1.start(now);
       osc1.stop(now + 0.08);
       osc2.start(now + 0.08);
@@ -141,7 +171,7 @@ function playArcadeSound(type) {
         gain.gain.setValueAtTime(0.15, now + idx * 0.07);
         gain.gain.exponentialRampToValueAtTime(0.01, now + (idx + 1) * 0.07);
         osc.connect(gain);
-        gain.connect(audioCtx.destination);
+        gain.connect(masterGainNode);
         osc.start(now + idx * 0.07);
         osc.stop(now + (idx + 1) * 0.07);
       });
@@ -157,7 +187,7 @@ function playArcadeSound(type) {
       gain.gain.setValueAtTime(0.2, now);
       gain.gain.linearRampToValueAtTime(0.01, now + 0.22);
       osc.connect(gain);
-      gain.connect(audioCtx.destination);
+      gain.connect(masterGainNode);
       osc.start(now);
       osc.stop(now + 0.22);
     }
@@ -173,7 +203,7 @@ function playArcadeSound(type) {
         gain.gain.setValueAtTime(0.2, now + idx * 0.14);
         gain.gain.exponentialRampToValueAtTime(0.01, now + (idx + 1) * 0.14);
         osc.connect(gain);
-        gain.connect(audioCtx.destination);
+        gain.connect(masterGainNode);
         osc.start(now + idx * 0.14);
         osc.stop(now + (idx + 1) * 0.14);
       });
@@ -188,7 +218,7 @@ function playArcadeSound(type) {
       gain.gain.setValueAtTime(0.06, now);
       gain.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
       osc.connect(gain);
-      gain.connect(audioCtx.destination);
+      gain.connect(masterGainNode);
       osc.start(now);
       osc.stop(now + 0.04);
     }
@@ -204,7 +234,7 @@ function playArcadeSound(type) {
         gain.gain.setValueAtTime(0.12, now + idx * 0.05);
         gain.gain.exponentialRampToValueAtTime(0.01, now + (idx + 1) * 0.05);
         osc.connect(gain);
-        gain.connect(audioCtx.destination);
+        gain.connect(masterGainNode);
         osc.start(now + idx * 0.05);
         osc.stop(now + (idx + 1) * 0.05);
       });
@@ -218,9 +248,9 @@ function playArcadeSound(type) {
 // GAME JUICE: VISUAL FEEDBACK & POPUP ANIMATIONS
 // ====================================================
 
-// Helper function to trigger violent camera shake and red damage flash
+// Helper function to trigger violent camera shake and red damage flash (respects VFX setting)
 function triggerScreenShake() {
-  if (!gameSection) return;
+  if (!gameSection || !currentSettings.vfxEnabled) return;
   gameSection.classList.remove('screen-shake', 'damage-flash');
   void gameSection.offsetWidth; // Force DOM reflow to re-trigger CSS animation
   gameSection.classList.add('screen-shake', 'damage-flash');
@@ -261,6 +291,77 @@ function updateStreakDisplay() {
     streakDisplay.classList.add('streak-fire');
   } else if (currentStreak >= 1) {
     streakDisplay.classList.add('streak-active');
+  }
+}
+
+// ====================================================
+// SYSTEM SETTINGS // DIP SWITCHES HARDWARE MANAGER
+// ====================================================
+
+function loadSavedSettings() {
+  try {
+    const saved = localStorage.getItem('banana_quest_arcade_settings');
+    if (saved) {
+      currentSettings = { ...DEFAULT_SETTINGS, ...JSON.parse(saved) };
+    }
+  } catch (e) {
+    currentSettings = { ...DEFAULT_SETTINGS };
+  }
+  applySettingsToUI();
+}
+
+function saveSettingsToStorage() {
+  try {
+    localStorage.setItem('banana_quest_arcade_settings', JSON.stringify(currentSettings));
+  } catch (e) {}
+}
+
+function applySettingsToUI() {
+  // 1. Audio Mute State
+  isMuted = !currentSettings.sfxEnabled;
+  if (sfxToggleBtn) {
+    sfxToggleBtn.textContent = isMuted ? '[🔇 SFX: OFF]' : '[🔊 SFX: ON]';
+    sfxToggleBtn.classList.toggle('muted', isMuted);
+  }
+  if (settingSfxToggle) {
+    settingSfxToggle.textContent = currentSettings.sfxEnabled ? '[ 🔊 SFX: ON ]' : '[ 🔇 SFX: OFF ]';
+    settingSfxToggle.classList.toggle('active-off', !currentSettings.sfxEnabled);
+  }
+
+  // 2. Master Volume
+  if (settingVolumeSlider) settingVolumeSlider.value = currentSettings.volume;
+  if (settingVolumeVal) settingVolumeVal.textContent = currentSettings.volume + '%';
+  if (audioCtx && masterGainNode) {
+    masterGainNode.gain.setValueAtTime(currentSettings.volume / 100, audioCtx.currentTime);
+  }
+
+  // 3. Timer Difficulty
+  if (settingDifficultySelect) {
+    settingDifficultySelect.value = String(currentSettings.timerDifficulty);
+  }
+
+  // 4. CRT Scanlines
+  document.body.classList.toggle('no-scanlines', !currentSettings.crtEnabled);
+  if (settingCrtToggle) {
+    settingCrtToggle.textContent = currentSettings.crtEnabled ? '[ 📺 CRT: ON ]' : '[ 📺 CRT: OFF ]';
+    settingCrtToggle.classList.toggle('active-off', !currentSettings.crtEnabled);
+  }
+
+  // 5. Screen Shake / Damage VFX
+  if (settingVfxToggle) {
+    settingVfxToggle.textContent = currentSettings.vfxEnabled ? '[ 💥 VFX: ON ]' : '[ 💥 VFX: OFF ]';
+    settingVfxToggle.classList.toggle('active-off', !currentSettings.vfxEnabled);
+  }
+
+  // 6. Outage Simulation
+  simulateOutage = currentSettings.simulateOutage;
+  if (settingApiToggle) {
+    settingApiToggle.textContent = simulateOutage ? '[ 🟠 SIMULATE OUTAGE ]' : '[ 🟢 LIVE MARCCONRAD ]';
+    settingApiToggle.classList.toggle('active-off', simulateOutage);
+  }
+  if (apiStatusPill) {
+    apiStatusPill.className = simulateOutage ? 'api-status-pill api-fallback' : 'api-status-pill api-live';
+    apiStatusPill.textContent = simulateOutage ? '[🟠 API: FALLBACK CACHE]' : '[🟢 API: LIVE MARCCONRAD]';
   }
 }
 
@@ -393,12 +494,12 @@ clearStreamBtn.addEventListener('click', () => {
 // THEME 3: EVENT-DRIVEN COUNTDOWN TIMER (CUSTOM EVENTS)
 // ====================================================
 
-// Function to start the 45-second event-driven arcade countdown timer
+// Function to start the event-driven arcade countdown timer
 function startTimer() {
   // Stop any active timer interval
   clearInterval(timerInterval);
-  // Reset time remaining to 45 seconds
-  timeLeft = 45;
+  // Set timer to configured difficulty DIP switch (default 45s, 60s easy, 20s hard)
+  timeLeft = parseInt(currentSettings.timerDifficulty, 10) || 45;
   // Enable interactive answering buttons
   submitGuessBtn.disabled = false;
   guessInput.disabled = false;
@@ -419,7 +520,7 @@ function startTimer() {
 
       // PUBLISHER: Dispatch custom 'timer-expired' event
       const expiredEvent = new CustomEvent('timer-expired', {
-        detail: { status: 'TIMEOUT', message: '45-second limit reached' }
+        detail: { status: 'TIMEOUT', message: 'Time limit reached' }
       });
       window.dispatchEvent(expiredEvent);
     }
@@ -495,19 +596,29 @@ window.addEventListener('auth-logout', (event) => {
 // THEME 2 & 3: GAMEPLAY LOOP & ARCADE SUBSCRIBERS
 // ====================================================
 
-// Helper function to request puzzle from backend proxy (supports simulated outages)
+// Helper function to request puzzle from backend proxy (supports background pre-fetching & simulated outages)
 async function loadPuzzle() {
   messageBox.style.color = 'var(--arcade-cyan)';
-  messageBox.textContent = simulateOutage ? 'SIMULATING OUTAGE: ENGAGING FALLBACK CACHE...' : 'FETCHING PUZZLE FROM MARC CONRAD API...';
+  messageBox.textContent = simulateOutage ? 'SIMULATING OUTAGE: ENGAGING FALLBACK CACHE...' : 'FETCHING PUZZLE FROM FAST PRE-FETCH BUFFER...';
 
   try {
     const query = simulateOutage ? '?simulateOutage=true' : '';
     const response = await fetch('/api/puzzle' + query);
     const data = await response.json();
 
+    // OPTIMIZATION: If backend provided a hint of the next puzzle in the queue, pre-cache the image!
+    if (data.nextQuestionHint) {
+      const preloadNext = new Image();
+      preloadNext.src = data.nextQuestionHint;
+    }
+
     // PUBLISHER: Dispatch custom 'puzzle-loaded' event with received image URL and source provenance
     window.dispatchEvent(new CustomEvent('puzzle-loaded', {
-      detail: { imageUrl: data.question, source: data.source || 'LIVE_MARCCONRAD' }
+      detail: {
+        imageUrl: data.question,
+        source: data.source || 'LIVE_MARCCONRAD',
+        prefetched: data.prefetched
+      }
     }));
   } catch (error) {
     messageBox.style.color = 'var(--arcade-red)';
@@ -515,16 +626,43 @@ async function loadPuzzle() {
   }
 }
 
-// SUBSCRIBER 6: Listen for custom 'puzzle-loaded' event
+// SUBSCRIBER 6: Listen for custom 'puzzle-loaded' event (Image Preloading & Timer Sync)
 window.addEventListener('puzzle-loaded', (event) => {
-  puzzleImg.src = event.detail.imageUrl;
+  // 1. Pause active timer so player never loses seconds while image downloads/decodes
+  clearInterval(timerInterval);
+  timerDisplay.classList.remove('panic-pulse');
+
+  // 2. Show loading status in message box until image is completely ready in DOM
+  messageBox.style.color = 'var(--arcade-yellow)';
+  messageBox.textContent = '⏳ DECODING PUZZLE ASSET...';
+
   puzzleImg.classList.remove('hidden');
   guessContainer.classList.remove('hidden');
-  submitGuessBtn.disabled = false;
-  guessInput.disabled = false;
-  guessInput.value = '';
-  messageBox.textContent = '';
-  guessInput.focus();
+  submitGuessBtn.disabled = true;
+  guessInput.disabled = true;
+
+  // 3. When image finishes loading in the browser, start the timer cleanly!
+  puzzleImg.onload = () => {
+    messageBox.textContent = '';
+    submitGuessBtn.disabled = false;
+    guessInput.disabled = false;
+    guessInput.value = '';
+    guessInput.focus();
+    startTimer();
+  };
+
+  // 4. Fallback if image fails to render
+  puzzleImg.onerror = () => {
+    messageBox.style.color = 'var(--arcade-red)';
+    messageBox.textContent = '⚠️ IMAGE LOAD DELAY - TIMER STARTED';
+    submitGuessBtn.disabled = false;
+    guessInput.disabled = false;
+    guessInput.focus();
+    startTimer();
+  };
+
+  // Trigger image fetch
+  puzzleImg.src = event.detail.imageUrl;
 
   // Update Interoperability Health Status Pill in HUD
   if (apiStatusPill) {
@@ -533,12 +671,15 @@ window.addEventListener('puzzle-loaded', (event) => {
       apiStatusPill.textContent = '[🟠 API: FALLBACK CACHE]';
     } else {
       apiStatusPill.className = 'api-status-pill api-live';
-      apiStatusPill.textContent = '[🟢 API: LIVE MARCCONRAD]';
+      apiStatusPill.textContent = event.detail.prefetched ? '[🟢 API: BUFFER (FAST)]' : '[🟢 API: LIVE MARCCONRAD]';
     }
   }
 
-  logToEventStream('puzzle-loaded', { imageUrl: event.detail.imageUrl, source: event.detail.source });
-  startTimer();
+  logToEventStream('puzzle-loaded', {
+    imageUrl: event.detail.imageUrl,
+    source: event.detail.source,
+    prefetched: event.detail.prefetched
+  });
 });
 
 // SUBSCRIBER 7: Listen for custom 'guess-evaluated' event
@@ -692,6 +833,11 @@ window.addEventListener('sfx-toggled', (event) => {
   logToEventStream('sfx-toggled', event.detail);
 });
 
+// SUBSCRIBER 14: Listen for custom 'settings-updated' event
+window.addEventListener('settings-updated', (event) => {
+  logToEventStream('settings-updated', event.detail, 'auth-success');
+});
+
 // ====================================================
 // GAME JUICE CONTROLS: SFX MUTE & INTEROP SIMULATION
 // ====================================================
@@ -700,8 +846,9 @@ window.addEventListener('sfx-toggled', (event) => {
 if (sfxToggleBtn) {
   sfxToggleBtn.addEventListener('click', () => {
     isMuted = !isMuted;
-    sfxToggleBtn.textContent = isMuted ? '[🔇 SFX: OFF]' : '[🔊 SFX: ON]';
-    sfxToggleBtn.classList.toggle('muted', isMuted);
+    currentSettings.sfxEnabled = !isMuted;
+    saveSettingsToStorage();
+    applySettingsToUI();
     window.dispatchEvent(new CustomEvent('sfx-toggled', { detail: { isMuted } }));
     if (!isMuted) playArcadeSound('coin');
   });
@@ -711,6 +858,9 @@ if (sfxToggleBtn) {
 if (apiStatusPill) {
   apiStatusPill.addEventListener('click', () => {
     simulateOutage = !simulateOutage;
+    currentSettings.simulateOutage = simulateOutage;
+    saveSettingsToStorage();
+    applySettingsToUI();
     playArcadeSound('click');
     window.dispatchEvent(new CustomEvent('interop-mode-changed', {
       detail: {
@@ -719,6 +869,102 @@ if (apiStatusPill) {
       }
     }));
     loadPuzzle();
+  });
+}
+
+// ====================================================
+// SYSTEM DIP SWITCHES // SETTINGS MODAL CONTROLLERS
+// ====================================================
+
+if (settingsBtn) {
+  settingsBtn.addEventListener('click', () => {
+    playArcadeSound('click');
+    applySettingsToUI();
+    settingsModal.classList.remove('hidden');
+    logToEventStream('settings-opened', { timestamp: Date.now() });
+  });
+}
+
+if (settingsCloseX) {
+  settingsCloseX.addEventListener('click', () => {
+    playArcadeSound('click');
+    settingsModal.classList.add('hidden');
+  });
+}
+
+if (settingsModal) {
+  settingsModal.addEventListener('click', (e) => {
+    if (e.target === settingsModal) {
+      playArcadeSound('click');
+      settingsModal.classList.add('hidden');
+    }
+  });
+}
+
+if (settingSfxToggle) {
+  settingSfxToggle.addEventListener('click', () => {
+    currentSettings.sfxEnabled = !currentSettings.sfxEnabled;
+    applySettingsToUI();
+    playArcadeSound('click');
+  });
+}
+
+if (settingVolumeSlider) {
+  settingVolumeSlider.addEventListener('input', (e) => {
+    currentSettings.volume = parseInt(e.target.value, 10);
+    applySettingsToUI();
+  });
+  settingVolumeSlider.addEventListener('change', () => {
+    playArcadeSound('click');
+  });
+}
+
+if (settingDifficultySelect) {
+  settingDifficultySelect.addEventListener('change', (e) => {
+    currentSettings.timerDifficulty = parseInt(e.target.value, 10);
+    playArcadeSound('click');
+  });
+}
+
+if (settingCrtToggle) {
+  settingCrtToggle.addEventListener('click', () => {
+    currentSettings.crtEnabled = !currentSettings.crtEnabled;
+    applySettingsToUI();
+    playArcadeSound('click');
+  });
+}
+
+if (settingVfxToggle) {
+  settingVfxToggle.addEventListener('click', () => {
+    currentSettings.vfxEnabled = !currentSettings.vfxEnabled;
+    applySettingsToUI();
+    playArcadeSound('click');
+  });
+}
+
+if (settingApiToggle) {
+  settingApiToggle.addEventListener('click', () => {
+    currentSettings.simulateOutage = !currentSettings.simulateOutage;
+    applySettingsToUI();
+    playArcadeSound('click');
+    window.dispatchEvent(new CustomEvent('interop-mode-changed', {
+      detail: {
+        simulatedOutage: simulateOutage,
+        mode: simulateOutage ? 'SIMULATED_FALLBACK' : 'LIVE_MARCCONRAD'
+      }
+    }));
+    if (gameSection && !gameSection.classList.contains('hidden')) {
+      loadPuzzle();
+    }
+  });
+}
+
+if (settingsSaveBtn) {
+  settingsSaveBtn.addEventListener('click', () => {
+    saveSettingsToStorage();
+    settingsModal.classList.add('hidden');
+    playArcadeSound('coin');
+    window.dispatchEvent(new CustomEvent('settings-updated', { detail: currentSettings }));
   });
 }
 
@@ -916,5 +1162,6 @@ async function checkExistingSession() {
   }
 }
 
-// Execute session verification on script boot
+// Execute settings initialization and session verification on script boot
+loadSavedSettings();
 checkExistingSession();
