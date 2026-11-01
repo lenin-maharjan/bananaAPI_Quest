@@ -5,6 +5,8 @@
 
 # PART 1: CIS046-3 WEEK 8 SIGN-OFF SHEET (OFFICIAL FIRST-CLASS ANSWERS)
 > **Instructions for Student:** You can copy and paste the answers below directly into your printed or digital Week 8 sign-off form. These responses are written to an academic **First-Class (70%+ / A-Grade)** standard, referencing exact files, functions, lines, and architectural design patterns.
+>
+> 🖨️ **Single A4 Page Printable Version:** A concise, bullet-point version optimized to fit cleanly onto a single printed A4 sheet is available in [`WEEK8_SIGNOFF_1PAGE.md`](file:///c:/Users/lenin/OneDrive/Documents/what%20L6/Software%20Enterprise/bananaAPI_Quest/WEEK8_SIGNOFF_1PAGE.md).
 
 ---
 
@@ -33,6 +35,9 @@
 > 8. **Phase 7: Game Juice, Polish & Live Fault-Tolerance (`feature/arcade-juice-polish`):** Introduced a global Express error-handling middleware in [`src/server.js:L56-L63`](file:///c:/Users/lenin/OneDrive/Documents/what%20L6/Software%20Enterprise/bananaAPI_Quest/src/server.js#L56-L63), solution undefined guards in `checkAnswer`, on-demand simulated outage toggling (`?simulateOutage=true`), live Interoperability health pills (`[🟢 API: LIVE]` vs `[🟠 API: FALLBACK]`), combo streak multipliers (`x1`, `x2`, `x3`), camera shake, CRT damage flash, floating animated "+PTS" score popups, a 10-second timer Panic Mode with rapid warning beeps, and an arcade SFX mute button (`[🔊 SFX: ON/OFF]`) for presentation recording.
 > 9. **Phase 8: Instant Pre-Fetch Pool & System DIP Switches (`feature/settings-and-instant-prefetch`):** Upgraded Interoperability with an asynchronous Producer-Consumer background puzzle queue (`puzzlePool = []`, target size: 3) in [`src/controllers/bananaController.js`](file:///c:/Users/lenin/OneDrive/Documents/what%20L6/Software%20Enterprise/bananaAPI_Quest/src/controllers/bananaController.js) with non-blocking replenishment, delivering sub-5ms puzzle responses (`prefetched: true`), preemptive browser image caching via `new Image().src = data.nextQuestionHint`, and timer synchronization that pauses the countdown until `puzzleImg.onload` confirms the asset has completely rendered. Added a dedicated 90s System DIP Switches modal (`#settings-modal`) with master volume scaling via Web Audio API `masterGainNode`, selectable timer difficulties (Easy 60s, Normal 45s, Hard 20s), CRT scanline toggle, VFX shake toggle, live API outage toggle, and `localStorage` persistence.
 > 10. **Phase 10: Dedicated Error Dashboard Tab & 3-Second Automatic Error Recovery (`main`):** Implemented a dual-tab MS-DOS console (`[BUS]` vs `[ERRORS]`) in [`public/index.html`](file:///c:/Users/lenin/OneDrive/Documents/what%20L6/Software%20Enterprise/bananaAPI_Quest/public/index.html) and [`public/css/style.css`](file:///c:/Users/lenin/OneDrive/Documents/what%20L6/Software%20Enterprise/bananaAPI_Quest/public/css/style.css) featuring `C:\BANANA_QUEST\ERROR_LOG.DAT`. Runtime faults, incorrect answers, countdown expirations, and API fetch drops are automatically intercepted by `logToErrorStream` and formatted in high-contrast crimson warning text with millisecond timestamps and unread notification alerts. Enhanced Subscriber 7 in [`public/js/app.js`](file:///c:/Users/lenin/OneDrive/Documents/what%20L6/Software%20Enterprise/bananaAPI_Quest/public/js/app.js) with 3-second automatic round progression on wrong answers, pausing the active round timer and locking keypad and keyboard inputs to eliminate manual advance clicking and prevent input spamming.
+> 11. **Phase 11: Full-Stack Modular Refactoring & Separation of Concerns (`feature/fullstack-modular-refactor`):** Completely eliminated large monolithic files across client and server to enforce strict architectural Separation of Concerns:
+>     - **Frontend ES6 Modularization (`public/js/`):** Upgraded `public/index.html` to `<script type="module" src="/js/app.js"></script>`. Extracted monolithic frontend code into 5 decoupled domain modules: [`audio.js`](file:///c:/Users/lenin/OneDrive/Documents/what%20L6/Software%20Enterprise/bananaAPI_Quest/public/js/audio.js) (Web Audio API procedural sound synthesis, volume scaling, and oscillator routing), [`terminal.js`](file:///c:/Users/lenin/OneDrive/Documents/what%20L6/Software%20Enterprise/bananaAPI_Quest/public/js/terminal.js) (MS-DOS dual-tab event and error streams), [`api.js`](file:///c:/Users/lenin/OneDrive/Documents/what%20L6/Software%20Enterprise/bananaAPI_Quest/public/js/api.js) (REST client encapsulating all backend fetch calls), [`ui.js`](file:///c:/Users/lenin/OneDrive/Documents/what%20L6/Software%20Enterprise/bananaAPI_Quest/public/js/ui.js) (DOM element references, view transitions, HUD score/lives updates, and DIP switch controls), and [`app.js`](file:///c:/Users/lenin/OneDrive/Documents/what%20L6/Software%20Enterprise/bananaAPI_Quest/public/js/app.js) (clean application entry point orchestrating state lifecycle, input handlers, and pub/sub event subscribers).
+>     - **Backend Service Layer & Config Extraction (`src/services/` & `src/config/`):** Extracted `FALLBACK_PUZZLE_BANK` into [`src/config/fallbackPuzzles.js`](file:///c:/Users/lenin/OneDrive/Documents/what%20L6/Software%20Enterprise/bananaAPI_Quest/src/config/fallbackPuzzles.js). Introduced a dedicated Service Layer in [`src/services/puzzleService.js`](file:///c:/Users/lenin/OneDrive/Documents/what%20L6/Software%20Enterprise/bananaAPI_Quest/src/services/puzzleService.js) encapsulating the Producer-Consumer puzzle buffer queue (`puzzlePool`), background refill worker, AbortSignal timeouts, and fallback rotation algorithms. Thinned [`src/controllers/bananaController.js`](file:///c:/Users/lenin/OneDrive/Documents/what%20L6/Software%20Enterprise/bananaAPI_Quest/src/controllers/bananaController.js) into a pure HTTP transport controller handling only `req`/`res` and session binding.
 >
 > All temporary files, database binaries (`database.sqlite`), and dependencies (`node_modules/`) are strictly excluded via [`.gitignore`](file:///c:/Users/lenin/OneDrive/Documents/what%20L6/Software%20Enterprise/bananaAPI_Quest/.gitignore), leaving the working tree completely clean."
 
@@ -257,22 +262,35 @@ graph TD
   - `exports.checkSession`: Inspects `req.session.username` to allow client-side page reconnects without re-entering passwords ([`L101-L109`](file:///c:/Users/lenin/OneDrive/Documents/what%20L6/Software%20Enterprise/bananaAPI_Quest/src/controllers/authController.js#L101-L109)).
   - `exports.logout`: Calls `req.session.destroy()` and clears client-side cookie `connect.sid` ([`L112-L120`](file:///c:/Users/lenin/OneDrive/Documents/what%20L6/Software%20Enterprise/bananaAPI_Quest/src/controllers/authController.js#L112-L120)).
 
-#### 4. [`src/controllers/bananaController.js`](file:///c:/Users/lenin/OneDrive/Documents/what%20L6/Software%20Enterprise/bananaAPI_Quest/src/controllers/bananaController.js) — Game & Interoperability Logic
-- **Role:** Handles external API consumption, Producer-Consumer puzzle buffer queue, 10+ offline puzzle bank, puzzle validation, and score records.
+#### 4. [`src/config/fallbackPuzzles.js`](file:///c:/Users/lenin/OneDrive/Documents/what%20L6/Software%20Enterprise/bananaAPI_Quest/src/config/fallbackPuzzles.js) — Offline Fallback Configuration
+- **Role:** Centralized configuration of verified offline puzzles.
+- **Implementation:** Exports `FALLBACK_PUZZLE_BANK`, a diverse bank of 12 verified offline puzzles covering solutions 0 through 9 to guarantee zero downtime during network drops.
+
+#### 5. [`src/services/puzzleService.js`](file:///c:/Users/lenin/OneDrive/Documents/what%20L6/Software%20Enterprise/bananaAPI_Quest/src/services/puzzleService.js) — Interoperability & Puzzle Service Layer
+- **Role:** Encapsulates core puzzle retrieval, background queue buffering, and failover business logic.
 - **Key Methods & Buffers:**
-  - `puzzlePool = []` & `refillPuzzlePool`: In-memory pre-fetch buffer (target size: 3) populated asynchronously in the background with a 2500ms timeout barrier.
-  - `FALLBACK_PUZZLE_BANK = [...]`: Diverse bank of 12 verified offline puzzles with solutions spanning digits 0 through 9, dynamically rotating via `getRandomFallbackPuzzle()` (avoiding consecutive repeats).
-  - `exports.getPuzzle`: Immediately shifts a puzzle from `puzzlePool` in `< 5ms`, sets `req.session.solution`, triggers non-blocking background refill, and returns `{ question, source: 'LIVE_MARCCONRAD', prefetched: true, nextQuestionHint: ... }`. If `?simulateOutage=true` or upstream network failure occurs (`ENOTFOUND`, `ETIMEDOUT`, `ECONNREFUSED`), automatically catches the failure, logs `"⚠️ Live API unreachable. Automatically engaging 10+ puzzle fallback bank..."` to console, and engages `FALLBACK_PUZZLE_BANK` with `source: 'FALLBACK_CACHE'`.
+  - `puzzlePool = []` & `refillPuzzlePool`: Producer-Consumer pre-fetch queue (target size: 3) continuously replenished asynchronously in the background.
+  - `getOptimalPuzzle(simulateOutage)`: Master retrieval service:
+    - If `simulateOutage === true`, serves a rotating offline puzzle from `FALLBACK_PUZZLE_BANK`.
+    - If `puzzlePool.length > 0`, instantly consumes from pre-fetch memory (`< 5ms` response time) with `prefetched: true` and triggers non-blocking background refill.
+    - If pool is empty, executes live HTTPS fetch to Marc Conrad's API guarded by a 2500ms `AbortSignal.timeout(2500)`.
+    - On remote network failure (`ENOTFOUND`, `ETIMEDOUT`, non-200 status), catches error, logs diagnostic alert, and gracefully fails over to the 12-puzzle offline cache.
+  - `getRandomFallbackPuzzle()`: Selects non-repeating puzzles across consecutive rounds.
+
+#### 6. [`src/controllers/bananaController.js`](file:///c:/Users/lenin/OneDrive/Documents/what%20L6/Software%20Enterprise/bananaAPI_Quest/src/controllers/bananaController.js) — Thin Game Controller Layer
+- **Role:** Pure HTTP transport controller handling `req` parsing and `res` serialization.
+- **Key Methods:**
+  - `exports.getPuzzle`: Delegates to `puzzleService.getOptimalPuzzle(simulateOutage)`, securely saves `req.session.solution = puzzle.solution`, and returns JSON response.
   - `exports.checkAnswer`: Evaluates player's guess against session-bound solution; includes guard checking `solution === undefined` returning HTTP 400 Bad Request if no puzzle is active.
   - `exports.saveScore`: Parameterized `INSERT INTO scores (username, score) VALUES (?, ?)` extracting username securely from session and enforcing non-negative scores.
   - `exports.getLeaderboard`: Executes aggregate SQL `SELECT username, MAX(score) AS high_score FROM scores GROUP BY username ORDER BY high_score DESC LIMIT 5`.
 
-#### 5. [`src/routes/authRoutes.js`](file:///c:/Users/lenin/OneDrive/Documents/what%20L6/Software%20Enterprise/bananaAPI_Quest/src/routes/authRoutes.js) & [`src/routes/bananaRoutes.js`](file:///c:/Users/lenin/OneDrive/Documents/what%20L6/Software%20Enterprise/bananaAPI_Quest/src/routes/bananaRoutes.js) — Routing Layer
+#### 7. [`src/routes/authRoutes.js`](file:///c:/Users/lenin/OneDrive/Documents/what%20L6/Software%20Enterprise/bananaAPI_Quest/src/routes/authRoutes.js) & [`src/routes/bananaRoutes.js`](file:///c:/Users/lenin/OneDrive/Documents/what%20L6/Software%20Enterprise/bananaAPI_Quest/src/routes/bananaRoutes.js) — Routing Layer
 - **Role:** Maps incoming URI endpoints to respective controller handler functions.
 - `authRoutes`: Maps `/register`, `/login`, `/session`, and `/logout`.
 - `bananaRoutes`: Maps `/puzzle`, `/check-answer`, `/score`, and `/leaderboard`. Injects `requireAuth` middleware before every route.
 
-#### 6. [`src/middleware/authMiddleware.js`](file:///c:/Users/lenin/OneDrive/Documents/what%20L6/Software%20Enterprise/bananaAPI_Quest/src/middleware/authMiddleware.js) — Security Route Guard
+#### 8. [`src/middleware/authMiddleware.js`](file:///c:/Users/lenin/OneDrive/Documents/what%20L6/Software%20Enterprise/bananaAPI_Quest/src/middleware/authMiddleware.js) — Security Route Guard
 - **Role:** Intercepts incoming requests before reaching sensitive game controllers.
 - **Implementation:** Validates `req.session && req.session.username`. If present, invokes `next()`; otherwise, aborts pipeline with HTTP 401 Unauthorized.
 
@@ -281,13 +299,13 @@ graph TD
 ### Frontend Components (`public/`)
 
 #### 1. [`public/index.html`](file:///c:/Users/lenin/OneDrive/Documents/what%20L6/Software%20Enterprise/bananaAPI_Quest/public/index.html) — Arcade Cabinet Structure
-- **Role:** Semantic HTML5 presentation structure.
+- **Role:** Semantic HTML5 presentation structure loading modular scripts via `<script type="module" src="/js/app.js"></script>`.
 - **Key Sections:**
   - **Marquee Header:** Real-time 1UP score tracker, High Score tracker, SFX Mute button (`#sfx-toggle-btn`), System Settings button (`#settings-btn`), and blinking arcade cabinet title.
   - **#login-section:** Authentication forms for Register and Login.
   - **#dashboard-section:** Main arcade menu displaying active user, Start Arcade Mode button, and Hall of Fame Leaderboard table.
   - **#game-section:** Interop Health Status Pill (`#api-status-pill`), Combo Streak badge (`#streak-display`), Floating Points container (`#floating-score-container`), HUD displaying SCORE, TIME, and LIVES; Marc Conrad puzzle image; 0–9 tactile keypad grid; Fire Answer button; and feedback box.
-  - **#event-stream-console:** MS-DOS style terminal log with Clear button.
+  - **#event-stream-console:** MS-DOS style dual-tab terminal console (`[BUS]` vs `[ERRORS]`).
   - **#settings-modal:** Retro 90s System DIP Switches modal featuring 6 hardware controls (SFX toggle, master volume slider, timer difficulty select, CRT scanlines toggle, VFX shake toggle, API outage simulation toggle) and a Save & Close button.
   - **#game-over-modal:** Animated CRT popup with CONTINUE? prompt, Final Score, and Insert Coin / Retry buttons.
 
@@ -303,16 +321,12 @@ graph TD
   - Custom 8-bit styling for range sliders (`.arcade-slider`), select dropdowns (`.arcade-select`), and DIP switch modals (`.settings-modal-content`).
   - Responsive flexbox and grid layouts adaptable from desktop monitors to mobile screens.
 
-#### 3. [`public/js/app.js`](file:///c:/Users/lenin/OneDrive/Documents/what%20L6/Software%20Enterprise/bananaAPI_Quest/public/js/app.js) — Client-Side Logic & Event Bus
-- **Role:** Manages the client-side lifecycle, Web Audio sound synthesis, Pub/Sub events, settings persistence, and view states.
-- **Key Modules:**
-  - **System Settings Manager:** `loadSavedSettings()` and `saveSettingsToStorage()` persist preferences in `localStorage` and synchronize hardware states across UI controls.
-  - **Web Audio API Synthesizer:** Generates 7 procedural sound effects with volume dynamically scaled via a centralized `masterGainNode`.
-  - **Finite State Machine:** `switchView(viewName)` switches between `login`, `dashboard`, and `game`.
-  - **Pre-Cache Image Synchronization:** Preloads `data.nextQuestionHint` via `new Image().src`; displays `"⏳ DECODING PUZZLE ASSET..."` and pauses timer until `puzzleImg.onload` confirms the graphic has rendered.
-  - **Pub/Sub CustomEvent Bus:** Dispatches and subscribes to 14 decoupled custom events across `window`.
-  - **MS-DOS Observer Logger:** Renders incoming event objects and timestamps in real time.
-  - **Dual Input Handlers:** Translates on-screen keypad clicks and physical keyboard digit presses (`0`–`9`) into instant answer guesses, with `F` key toggling outage simulation.
+#### 3. Frontend ES6 Modules (`public/js/`) — Decoupled Domain Architecture
+- **[`public/js/audio.js`](file:///c:/Users/lenin/OneDrive/Documents/what%20L6/Software%20Enterprise/bananaAPI_Quest/public/js/audio.js):** Encapsulates the Web Audio API subsystem. Exports `audioCtx`, `masterGainNode`, and `playArcadeSound()` generating 7 procedural sound effects with master volume scaling.
+- **[`public/js/terminal.js`](file:///c:/Users/lenin/OneDrive/Documents/what%20L6/Software%20Enterprise/bananaAPI_Quest/public/js/terminal.js):** Manages the dual-tab MS-DOS console. Exports `switchTerminalTab()`, `logToEventStream()` (Pub/Sub observer logger), and `logToErrorStream()` (fault interception).
+- **[`public/js/api.js`](file:///c:/Users/lenin/OneDrive/Documents/what%20L6/Software%20Enterprise/bananaAPI_Quest/public/js/api.js):** REST client module encapsulating all backend `fetch()` operations (`checkSession`, `register`, `login`, `logout`, `fetchPuzzle`, `checkAnswer`, `submitScore`, `fetchLeaderboard`).
+- **[`public/js/ui.js`](file:///c:/Users/lenin/OneDrive/Documents/what%20L6/Software%20Enterprise/bananaAPI_Quest/public/js/ui.js):** Encapsulates DOM element caching, finite state machine view transitions (`switchView`), HUD displays (lives, score, timer, streak), DIP switch UI synchronization, and modal popups.
+- **[`public/js/app.js`](file:///c:/Users/lenin/OneDrive/Documents/what%20L6/Software%20Enterprise/bananaAPI_Quest/public/js/app.js):** Clean orchestrator entry point. Imports domain modules, manages game state lifecycle, and attaches 14 decoupled `window` custom event subscribers and hardware input listeners.
 
 ---
 
