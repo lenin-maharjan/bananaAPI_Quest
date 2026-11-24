@@ -1,5 +1,24 @@
-# Ignore dependencies installed by npm
+# Dependencies
 node_modules/
 
-# Ignore local SQLite database file generated at runtime
+# Local SQLite Database binaries and lock journals
 *.sqlite
+*.sqlite-journal
+
+# Environment variable files
+.env
+.env.*
+!.env.example
+
+# Runtime logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Operating System artifacts
+.DS_Store
+Thumbs.db
+
+# Submission archives
+submission_*.zip

@@ -1,846 +1,348 @@
 // ====================================================
-// BANANA QUEST: 90s RETRO ARCADE MODULAR ES6 CLIENT
-// THEME 1: STRICT SEPARATION OF CONCERNS & ARCHITECTURAL COUPLING
-// THEME 2: INTEROPERABILITY (REST API PROXY & FAULT TOLERANCE)
-// THEME 3: EVENT-DRIVEN PROGRAMMING (PUB/SUB & WEB AUDIO SYNTH)
-// THEME 4: VIRTUAL IDENTITY (SQLITE AUTH & PERSISTENT SCORES)
+// File: public/js/app.js
+// Author: Lenin Maharjan (Student ID: 2425736)
+// Module: CIS046-3 Software for Enterprise AY 26/27
+//
+// Authorship & AI Assistance Disclosure:
+// - Architecture, event coordination, and client flow designed by the Author.
+// - Implementation drafted and refactored with generative AI assistance (Gemini 3.8 / Antigravity IDE).
+// - All logic manually reviewed, debugged, and verified by the Author.
+//
+// External References & Documentation:
+// - DOM CustomEvent (Pub/Sub): https://developer.mozilla.org/en-US/docs/Web/API/CustomEvent
+// - Fetch API: https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API
 // ====================================================
 
 import * as audio from './audio.js';
-import * as terminal from './terminal.js';
 import * as api from './api.js';
 import * as ui from './ui.js';
+import * as settings from './settings.js';
+import * as gameState from './gameState.js';
 
-// ====================================================
-// APPLICATION STATE
-// ====================================================
+const on = (el, evt, fn) => el && el.addEventListener(evt, fn);
 
-// Global timer tracking variables
-let timerInterval = null;
-let timeLeft = 45;
-
-// Global arcade player state
-let lives = 3;
-let currentScore = 0;
-
-// Game Juice & Polish State
-let isMuted = false;
-let simulateOutage = false;
-let currentStreak = 0;
-
-// Auto-advance timer and concurrency guards
-let autoAdvanceTimeout = null;
-let isLoadingPuzzle = false;
-let isSubmitting = false;
-
-// Persistent Settings State Object (LocalStorage)
-const DEFAULT_SETTINGS = {
-  sfxEnabled: true,
-  volume: 80,
-  timerDifficulty: 45,
-  crtEnabled: true,
-  vfxEnabled: true,
-  simulateOutage: false
-};
-let currentSettings = { ...DEFAULT_SETTINGS };
-
-// ====================================================
-// SETTINGS & STORAGE LIFECYCLE
-// ====================================================
-
-function loadSavedSettings() {
-  try {
-    const saved = localStorage.getItem('banana_quest_arcade_settings');
-    if (saved) {
-      currentSettings = { ...DEFAULT_SETTINGS, ...JSON.parse(saved) };
-    }
-  } catch (e) {
-    currentSettings = { ...DEFAULT_SETTINGS };
-  }
-
-  isMuted = !currentSettings.sfxEnabled;
-  simulateOutage = Boolean(currentSettings.simulateOutage);
-
-  // Synchronize audio module
-  audio.setAudioMuted(isMuted);
-  audio.setSfxEnabled(currentSettings.sfxEnabled);
-  audio.setAudioVolume(currentSettings.volume);
-
-  // Synchronize UI elements
-  ui.applySettingsToUI(currentSettings, isMuted, simulateOutage);
+// --- Settings & UI Synchronization ---
+function syncSettingsUI() {
+  const cur = settings.getSettings();
+  audio.setAudioMuted(!cur.sfxEnabled);
+  audio.setSfxEnabled(cur.sfxEnabled);
+  audio.setAudioVolume(cur.volume);
+  ui.applySettingsToUI(cur, !cur.sfxEnabled, cur.simulateOutage);
 }
 
-function saveSettingsToStorage() {
-  try {
-    localStorage.setItem('banana_quest_arcade_settings', JSON.stringify(currentSettings));
-  } catch (e) {}
+function initSettings() {
+  settings.loadSavedSettings();
+  syncSettingsUI();
 }
 
-// ====================================================
-// LEADERBOARD DATA RETRIEVAL
-// ====================================================
+function toggleSfx() {
+  const sfx = settings.toggleSfxEnabled();
+  settings.saveSettingsToStorage();
+  syncSettingsUI();
+  return sfx;
+}
 
+// --- Leaderboard & Session Management ---
 async function refreshLeaderboard() {
   try {
     const data = await api.fetchLeaderboard();
-    if (data.success) {
-      ui.renderLeaderboard(data.leaderboard);
-      terminal.logToEventStream('leaderboard-fetched', {
-        totalEntries: data.leaderboard ? data.leaderboard.length : 0
-      });
-    }
-  } catch (err) {
-    console.error('Failed to fetch leaderboard:', err);
-  }
+    if (data.success) ui.renderLeaderboard(data.leaderboard);
+  } catch (err) { console.error('Failed to fetch leaderboard:', err); }
 }
 
-// ====================================================
-// THEME 3: EVENT-DRIVEN COUNTDOWN TIMER (CUSTOM EVENTS)
-// ====================================================
-
-function startTimer() {
-  if (autoAdvanceTimeout) {
-    clearTimeout(autoAdvanceTimeout);
-    autoAdvanceTimeout = null;
-  }
-  clearInterval(timerInterval);
-
-  timeLeft = parseInt(currentSettings.timerDifficulty, 10) || 45;
-  ui.submitGuessBtn.disabled = false;
-  ui.guessInput.disabled = false;
-
-  timerInterval = setInterval(() => {
-    timeLeft--;
-
-    // PUBLISHER: Dispatch custom 'timer-tick' event
-    window.dispatchEvent(new CustomEvent('timer-tick', {
-      detail: { seconds: timeLeft }
-    }));
-
-    if (timeLeft <= 0) {
-      clearInterval(timerInterval);
-
-      // PUBLISHER: Dispatch custom 'timer-expired' event
-      window.dispatchEvent(new CustomEvent('timer-expired', {
-        detail: { status: 'TIMEOUT', message: 'Time limit reached' }
-      }));
-    }
-  }, 1000);
+async function checkExistingSession() {
+  try {
+    const res = await api.checkSession();
+    if (res.loggedIn) window.dispatchEvent(new CustomEvent('auth-success', { detail: { username: res.username, reconnected: true } }));
+    else ui.switchView('login');
+  } catch { ui.switchView('login'); }
 }
 
-// ====================================================
-// THEME 2: ASYNC PUZZLE LOADER & PRE-CACHE PIPELINE
-// ====================================================
+async function performLogout() {
+  audio.playArcadeSound('click');
+  try { await api.logout(); } catch (err) { console.error('Logout error:', err); }
+  gameState.stopTimerInterval();
+  window.dispatchEvent(new CustomEvent('auth-logout', { detail: { status: 'SESSION_DESTROYED' } }));
+}
+
+// --- Gameplay Flow ---
+function startRoundTimer() {
+  ui.submitGuessBtn.disabled = ui.guessInput.disabled = false;
+  gameState.startTimerInterval(
+    settings.getTimerDifficulty(),
+    (sec) => window.dispatchEvent(new CustomEvent('timer-tick', { detail: { seconds: sec } })),
+    () => window.dispatchEvent(new CustomEvent('timer-expired', { detail: { status: 'TIMEOUT' } }))
+  );
+}
 
 async function loadPuzzle() {
-  if (autoAdvanceTimeout) {
-    clearTimeout(autoAdvanceTimeout);
-    autoAdvanceTimeout = null;
-  }
-
-  if (isLoadingPuzzle) return;
-  isLoadingPuzzle = true;
-
+  gameState.clearAutoAdvance();
+  if (gameState.isLoading()) return;
+  gameState.setIsLoading(true);
+  ui.setPuzzleLoading(true);
+  const outage = settings.isSimulateOutage();
   ui.messageBox.style.color = 'var(--arcade-cyan)';
-  ui.messageBox.textContent = simulateOutage
-    ? 'SIMULATING OUTAGE: ENGAGING BACKUP CACHE...'
-    : 'FETCHING PUZZLE FROM FAST BUFFER...';
+  ui.messageBox.textContent = outage ? 'SIMULATING OUTAGE: ENGAGING BACKUP CACHE...' : 'FETCHING PUZZLE FROM FAST BUFFER...';
 
   try {
-    const data = await api.fetchPuzzle(simulateOutage);
-
-    // INTERCEPT ERROR / OUTAGE: Record to MS-DOS Error Dashboard if served from cache
-    if (data.source === 'FALLBACK_CACHE') {
-      terminal.logToErrorStream(
-        'NETWORK_OUTAGE_FALLBACK',
-        { source: 'FALLBACK_CACHE', simulateOutage, question: data.question },
-        simulateOutage
-          ? 'Manual outage simulation activated (?simulateOutage=true) - Fallback cache bank engaged'
-          : 'Live API unreachable (timeout or socket drop) - Automatically engaged 10+ Fallback Cache'
-      );
-    }
-
-    // PRE-CACHE: Preemptively cache the next image in the queue
-    if (data.nextQuestionHint) {
-      const preloadNext = new Image();
-      preloadNext.src = data.nextQuestionHint;
-    }
-
-    // PUBLISHER: Dispatch custom 'puzzle-loaded' event
+    const data = await api.fetchPuzzle(outage);
+    if (data.nextQuestionHint) new Image().src = data.nextQuestionHint;
     window.dispatchEvent(new CustomEvent('puzzle-loaded', {
-      detail: {
-        imageUrl: data.question,
-        source: data.source || 'LIVE_MARCCONRAD',
-        prefetched: data.prefetched
-      }
+      detail: { imageUrl: data.question, source: data.source || 'LIVE_MARCCONRAD', prefetched: data.prefetched }
     }));
-  } catch (error) {
-    terminal.logToErrorStream(
-      'API_CONNECTION_FAILURE',
-      { error: error.message || String(error), simulateOutage },
-      'Network fetch failed to reach backend /api/puzzle endpoint'
-    );
+  } catch {
+    ui.setPuzzleLoading(false);
     ui.messageBox.style.color = 'var(--arcade-red)';
     ui.messageBox.textContent = 'ERROR LOADING PUZZLE';
   } finally {
-    isLoadingPuzzle = false;
+    gameState.setIsLoading(false);
   }
 }
 
-// ====================================================
-// CUSTOM EVENT SUBSCRIBERS (OBSERVER PATTERN)
-// ====================================================
+function handleCorrectGuess({ message }) {
+  gameState.stopTimerInterval();
+  ui.timerDisplay?.classList.remove('panic-pulse');
+  audio.playArcadeSound('correct');
+  const streak = gameState.incrementStreak();
+  const pts = gameState.calculatePoints(gameState.getTimeLeft(), streak);
+  const newScore = gameState.addScore(pts.total);
+  ui.updateStreakDisplay(streak);
+  ui.updateScoreDisplay(newScore);
+  ui.triggerScreenHeal();
+  const bonus = streak > 1 ? `+${pts.total} PTS (${streak}X COMBO!)` : `+${pts.total} PTS!`;
+  ui.showFloatingPoints(bonus);
+  if (streak >= 2) audio.playArcadeSound('streak');
+  window.dispatchEvent(new CustomEvent('streak-updated', { detail: { streak, bonus: pts.streakBonus, totalScore: newScore } }));
+  ui.submitGuessBtn.disabled = ui.guessInput.disabled = true;
+  ui.messageBox.style.color = 'var(--arcade-green)';
+  ui.messageBox.textContent = `★ ${message} ${bonus} NEXT IN 1.5S ★`;
+  gameState.scheduleAutoAdvance(() => loadPuzzle(), 1500);
+}
 
-// SUBSCRIBER 1: timer-tick
-window.addEventListener('timer-tick', (event) => {
-  const isPanic = event.detail.seconds <= 10 && event.detail.seconds > 0;
-  ui.updateTimerDisplay(event.detail.seconds, isPanic);
-
-  if (isPanic) {
-    audio.playArcadeSound('tick');
+function handleIncorrectGuess({ message }) {
+  audio.playArcadeSound('wrong');
+  gameState.resetStreak();
+  ui.updateStreakDisplay(0);
+  ui.triggerScreenShake(settings.isVfxEnabled());
+  window.dispatchEvent(new CustomEvent('streak-updated', { detail: { streak: 0, reset: true } }));
+  const livesLeft = gameState.decrementLives();
+  ui.updateLivesDisplay(livesLeft);
+  gameState.stopTimerInterval();
+  ui.timerDisplay?.classList.remove('panic-pulse');
+  ui.submitGuessBtn.disabled = ui.guessInput.disabled = true;
+  ui.messageBox.style.color = 'var(--arcade-red)';
+  if (livesLeft > 0) {
+    ui.messageBox.textContent = `✖ ${message} (${livesLeft} LIVES LEFT) - AUTO-RECOVERING IN 3S...`;
+    gameState.scheduleAutoAdvance(() => loadPuzzle(), 3000);
+  } else {
+    gameState.clearAutoAdvance();
+    ui.messageBox.textContent = '💀 GAME OVER! ZERO LIVES REMAINING.';
+    window.dispatchEvent(new CustomEvent('game-over', { detail: { reason: 'OUT_OF_LIVES', finalScore: gameState.getScore(), timestamp: Date.now() } }));
   }
+}
 
-  terminal.logToEventStream('timer-tick', event.detail, 'timer-tick');
+// --- Custom Event Subscribers (Observer Pattern) ---
+window.addEventListener('timer-tick', (e) => {
+  const isPanic = e.detail.seconds <= 10 && e.detail.seconds > 0;
+  ui.updateTimerDisplay(e.detail.seconds, isPanic);
+  if (isPanic) audio.playArcadeSound('tick');
 });
 
-// SUBSCRIBER 2: timer-expired
-window.addEventListener('timer-expired', (event) => {
+window.addEventListener('timer-expired', () => {
   ui.updateTimerDisplay(0, false);
   if (ui.timerDisplay) ui.timerDisplay.textContent = 'TIME EXPIRED!';
-  lives = 0;
-  ui.updateLivesDisplay(lives);
-  currentStreak = 0;
-  ui.updateStreakDisplay(currentStreak);
-  ui.submitGuessBtn.disabled = true;
-  ui.guessInput.disabled = true;
-  ui.triggerScreenShake(currentSettings.vfxEnabled);
-
-  terminal.logToEventStream('timer-expired', event.detail, 'timer-expired');
-  terminal.logToErrorStream('COUNTDOWN_TIMEOUT', event.detail, 'Round timer reached 00s without a submitted solution');
-
-  window.dispatchEvent(new CustomEvent('game-over', {
-    detail: { reason: 'TIME_EXPIRED', finalScore: currentScore, timestamp: Date.now() }
-  }));
+  gameState.setLives(0);
+  gameState.resetStreak();
+  ui.updateLivesDisplay(0);
+  ui.updateStreakDisplay(0);
+  ui.submitGuessBtn.disabled = ui.guessInput.disabled = true;
+  ui.triggerScreenShake(settings.isVfxEnabled());
+  window.dispatchEvent(new CustomEvent('game-over', { detail: { reason: 'TIME_EXPIRED', finalScore: gameState.getScore(), timestamp: Date.now() } }));
 });
 
-// SUBSCRIBER 3: auth-register
-window.addEventListener('auth-register', (event) => {
-  terminal.logToEventStream('auth-register', event.detail, 'auth-register');
-});
-
-// SUBSCRIBER 4: auth-success
-window.addEventListener('auth-success', (event) => {
+window.addEventListener('auth-success', (e) => {
   ui.switchView('dashboard');
   refreshLeaderboard();
-  if (ui.dashUserSpan) ui.dashUserSpan.textContent = event.detail.username;
-  if (ui.currentUserSpan) ui.currentUserSpan.textContent = event.detail.username;
+  if (ui.dashUserSpan) ui.dashUserSpan.textContent = e.detail.username;
+  if (ui.currentUserSpan) ui.currentUserSpan.textContent = e.detail.username;
   if (ui.authMessage) ui.authMessage.textContent = '';
-  terminal.logToEventStream('auth-success', event.detail, 'auth-success');
 });
 
-// SUBSCRIBER 5: auth-logout
-window.addEventListener('auth-logout', (event) => {
+window.addEventListener('auth-logout', () => {
   ui.switchView('login');
-  if (ui.puzzleImg) ui.puzzleImg.classList.add('hidden');
-  if (ui.guessContainer) ui.guessContainer.classList.add('hidden');
+  ui.puzzleImg?.classList.add('hidden');
+  ui.guessContainer?.classList.add('hidden');
   if (ui.messageBox) ui.messageBox.textContent = '';
-  currentStreak = 0;
+  gameState.resetStreak();
   ui.updateStreakDisplay(0);
-  if (ui.timerDisplay) ui.timerDisplay.classList.remove('panic-pulse');
-  terminal.logToEventStream('auth-logout', event.detail);
+  ui.timerDisplay?.classList.remove('panic-pulse');
 });
 
-// SUBSCRIBER 6: puzzle-loaded
-window.addEventListener('puzzle-loaded', (event) => {
-  if (autoAdvanceTimeout) {
-    clearTimeout(autoAdvanceTimeout);
-    autoAdvanceTimeout = null;
-  }
-
+window.addEventListener('puzzle-loaded', (e) => {
+  gameState.clearAutoAdvance();
   if (ui.puzzleImg) {
-    ui.puzzleImg.classList.remove('hidden');
-    ui.puzzleImg.src = event.detail.imageUrl;
+    ui.puzzleImg.onload = ui.puzzleImg.onerror = () => { ui.setPuzzleLoading(false); ui.puzzleImg.classList.remove('hidden'); };
+    ui.puzzleImg.src = e.detail.imageUrl;
   }
-  if (ui.guessContainer) ui.guessContainer.classList.remove('hidden');
-
-  ui.submitGuessBtn.disabled = false;
-  ui.guessInput.disabled = false;
-  ui.guessInput.value = '';
-  ui.messageBox.textContent = '';
+  ui.guessContainer?.classList.remove('hidden');
+  ui.submitGuessBtn.disabled = ui.guessInput.disabled = false;
+  ui.guessInput.value = ui.messageBox.textContent = '';
   ui.guessInput.focus();
-
-  if (ui.timerDisplay) ui.timerDisplay.classList.remove('panic-pulse');
-  startTimer();
-
-  ui.updateApiStatusPill(event.detail.source, simulateOutage);
-
-  terminal.logToEventStream('puzzle-loaded', {
-    imageUrl: event.detail.imageUrl,
-    source: event.detail.source,
-    prefetched: event.detail.prefetched
-  });
+  ui.timerDisplay?.classList.remove('panic-pulse');
+  startRoundTimer();
+  ui.updateApiStatusPill(e.detail.source, settings.isSimulateOutage());
 });
 
-// SUBSCRIBER 7: guess-evaluated
-window.addEventListener('guess-evaluated', (event) => {
-  terminal.logToEventStream('guess-evaluated', event.detail);
+window.addEventListener('guess-evaluated', (e) => (e.detail.correct ? handleCorrectGuess : handleIncorrectGuess)(e.detail));
 
-  if (event.detail.correct) {
-    // CORRECT ANSWER
-    clearInterval(timerInterval);
-    if (ui.timerDisplay) ui.timerDisplay.classList.remove('panic-pulse');
-    audio.playArcadeSound('correct');
-
-    currentStreak++;
-    ui.updateStreakDisplay(currentStreak);
-    const streakBonus = currentStreak > 1 ? (currentStreak - 1) * 50 : 0;
-    const pointsEarned = 100 + (timeLeft * 2) + streakBonus;
-    currentScore += pointsEarned;
-    ui.updateScoreDisplay(currentScore);
-
-    ui.triggerScreenHeal();
-    const bonusText = currentStreak > 1 ? `+${pointsEarned} PTS (${currentStreak}X COMBO!)` : `+${pointsEarned} PTS!`;
-    ui.showFloatingPoints(bonusText);
-
-    if (currentStreak >= 2) {
-      audio.playArcadeSound('streak');
-    }
-
-    window.dispatchEvent(new CustomEvent('streak-updated', {
-      detail: { streak: currentStreak, bonus: streakBonus, totalScore: currentScore }
-    }));
-
-    ui.submitGuessBtn.disabled = true;
-    ui.guessInput.disabled = true;
-    ui.messageBox.style.color = 'var(--arcade-green)';
-    ui.messageBox.textContent = `★ ${event.detail.message} ${bonusText} NEXT IN 1.5S ★`;
-
-    if (autoAdvanceTimeout) {
-      clearTimeout(autoAdvanceTimeout);
-      autoAdvanceTimeout = null;
-    }
-    autoAdvanceTimeout = setTimeout(() => {
-      loadPuzzle();
-    }, 1500);
-
-  } else {
-    // INCORRECT ANSWER
-    audio.playArcadeSound('wrong');
-    currentStreak = 0;
-    ui.updateStreakDisplay(0);
-    ui.triggerScreenShake(currentSettings.vfxEnabled);
-
-    window.dispatchEvent(new CustomEvent('streak-updated', {
-      detail: { streak: 0, reset: true }
-    }));
-
-    lives--;
-    ui.updateLivesDisplay(lives);
-
-    terminal.logToErrorStream(
-      'INCORRECT_GUESS',
-      event.detail,
-      `Incorrect solution: "${event.detail.guess !== undefined ? event.detail.guess : ui.guessInput.value}". 1 Life deducted (${lives} lives remaining)`
-    );
-
-    if (lives > 0) {
-      clearInterval(timerInterval);
-      if (ui.timerDisplay) ui.timerDisplay.classList.remove('panic-pulse');
-
-      ui.submitGuessBtn.disabled = true;
-      ui.guessInput.disabled = true;
-
-      ui.messageBox.style.color = 'var(--arcade-red)';
-      ui.messageBox.textContent = `✖ ${event.detail.message} (${lives} LIVES LEFT) - AUTO-RECOVERING IN 3S...`;
-
-      if (autoAdvanceTimeout) {
-        clearTimeout(autoAdvanceTimeout);
-        autoAdvanceTimeout = null;
-      }
-      autoAdvanceTimeout = setTimeout(() => {
-        loadPuzzle();
-      }, 3000);
-
-    } else {
-      // GAME OVER
-      if (autoAdvanceTimeout) {
-        clearTimeout(autoAdvanceTimeout);
-        autoAdvanceTimeout = null;
-      }
-      clearInterval(timerInterval);
-      if (ui.timerDisplay) ui.timerDisplay.classList.remove('panic-pulse');
-      ui.submitGuessBtn.disabled = true;
-      ui.guessInput.disabled = true;
-      ui.messageBox.style.color = 'var(--arcade-red)';
-      ui.messageBox.textContent = '💀 GAME OVER! ZERO LIVES REMAINING.';
-
-      window.dispatchEvent(new CustomEvent('game-over', {
-        detail: { reason: 'OUT_OF_LIVES', finalScore: currentScore, timestamp: Date.now() }
-      }));
-    }
-  }
+window.addEventListener('game-start', () => {
+  gameState.resetRunState(settings.getTimerDifficulty());
+  ui.updateLivesDisplay(gameState.getLives());
+  ui.updateScoreDisplay(gameState.getScore());
+  ui.updateStreakDisplay(gameState.getStreak());
+  ui.timerDisplay?.classList.remove('panic-pulse');
 });
 
-// SUBSCRIBER 8: game-start
-window.addEventListener('game-start', (event) => {
-  lives = 3;
-  ui.updateLivesDisplay(lives);
-  currentScore = 0;
-  ui.updateScoreDisplay(currentScore);
-  currentStreak = 0;
-  ui.updateStreakDisplay(0);
-  if (ui.timerDisplay) ui.timerDisplay.classList.remove('panic-pulse');
-  terminal.logToEventStream('game-start', event.detail, 'game-start');
-});
-
-// SUBSCRIBER 9: game-over
-window.addEventListener('game-over', async (event) => {
+window.addEventListener('game-over', async (e) => {
   audio.playArcadeSound('gameover');
-  if (ui.timerDisplay) ui.timerDisplay.classList.remove('panic-pulse');
-  currentStreak = 0;
+  ui.timerDisplay?.classList.remove('panic-pulse');
+  gameState.resetStreak();
   ui.updateStreakDisplay(0);
-  terminal.logToEventStream('game-over', event.detail, 'timer-expired');
-  terminal.logToErrorStream(
-    'GAME_OVER',
-    event.detail,
-    `Game Over state triggered (${event.detail.reason || 'OUT_OF_LIVES'}) - Final Score: ${event.detail.finalScore !== undefined ? event.detail.finalScore : currentScore} PTS`
-  );
-
-  // Asynchronously record final score in SQLite database via API service
+  const finalScore = e.detail.finalScore ?? gameState.getScore();
   try {
-    const data = await api.submitScore(currentScore);
+    const data = await api.submitScore(finalScore);
     if (data.success) {
-      window.dispatchEvent(new CustomEvent('score-saved', {
-        detail: { score: currentScore, dbRecord: data.scoreId, username: data.username }
-      }));
+      window.dispatchEvent(new CustomEvent('score-saved', { detail: { score: finalScore, dbRecord: data.scoreId, username: data.username } }));
     }
-  } catch (err) {
-    console.error('Failed to persist score:', err);
-  }
-
-  ui.showGameOverModal(currentScore);
+  } catch (err) { console.error('Failed to persist score:', err); }
+  ui.showGameOverModal(finalScore);
 });
 
-// SUBSCRIBER 10: score-saved
-window.addEventListener('score-saved', (event) => {
-  terminal.logToEventStream('score-saved', event.detail, 'auth-success');
-  const savedScore = event.detail.score || 0;
-  const currentHigh = parseInt(ui.marqueeHigh ? ui.marqueeHigh.textContent : '0', 10) || 0;
-  if (savedScore > currentHigh && ui.marqueeHigh) {
-    ui.marqueeHigh.textContent = String(savedScore).padStart(4, '0');
-    terminal.logToEventStream('high-score-beat', { newHighScore: savedScore });
-  }
+window.addEventListener('score-saved', (e) => {
+  const saved = e.detail.score || 0;
+  const high = parseInt(ui.marqueeHigh ? ui.marqueeHigh.textContent : '0', 10) || 0;
+  if (saved > high && ui.marqueeHigh) ui.marqueeHigh.textContent = String(saved).padStart(4, '0');
 });
 
-// SUBSCRIBER 11: streak-updated
-window.addEventListener('streak-updated', (event) => {
-  terminal.logToEventStream('streak-updated', event.detail, 'game-start');
-});
-
-// SUBSCRIBER 12: interop-mode-changed
-window.addEventListener('interop-mode-changed', (event) => {
-  terminal.logToEventStream('interop-mode-changed', event.detail, 'timer-tick');
-});
-
-// SUBSCRIBER 13: sfx-toggled
-window.addEventListener('sfx-toggled', (event) => {
-  terminal.logToEventStream('sfx-toggled', event.detail);
-});
-
-// SUBSCRIBER 14: settings-updated
-window.addEventListener('settings-updated', (event) => {
-  terminal.logToEventStream('settings-updated', event.detail, 'auth-success');
-});
-
-// ====================================================
-// DOM BUTTON & INPUT LISTENERS
-// ====================================================
-
-// SFX Mute / Unmute Toggle Button
-if (ui.sfxToggleBtn) {
-  ui.sfxToggleBtn.addEventListener('click', () => {
-    isMuted = !isMuted;
-    currentSettings.sfxEnabled = !isMuted;
-    audio.setAudioMuted(isMuted);
-    audio.setSfxEnabled(currentSettings.sfxEnabled);
-    saveSettingsToStorage();
-    ui.applySettingsToUI(currentSettings, isMuted, simulateOutage);
-    window.dispatchEvent(new CustomEvent('sfx-toggled', { detail: { isMuted } }));
-    if (!isMuted) audio.playArcadeSound('coin');
-  });
-}
-
-// Interoperability Status Pill Click Listener (Simulation Outage Toggle)
-if (ui.apiStatusPill) {
-  ui.apiStatusPill.addEventListener('click', () => {
-    if (autoAdvanceTimeout) {
-      clearTimeout(autoAdvanceTimeout);
-      autoAdvanceTimeout = null;
-    }
-    simulateOutage = !simulateOutage;
-    currentSettings.simulateOutage = simulateOutage;
-    saveSettingsToStorage();
-    ui.applySettingsToUI(currentSettings, isMuted, simulateOutage);
-    audio.playArcadeSound('click');
-    window.dispatchEvent(new CustomEvent('interop-mode-changed', {
-      detail: {
-        simulatedOutage: simulateOutage,
-        mode: simulateOutage ? 'SIMULATED_FALLBACK' : 'LIVE_MARCCONRAD'
-      }
-    }));
-    loadPuzzle();
-  });
-}
-
-// DIP Switches Settings Modal Listeners
-if (ui.settingsBtn) {
-  ui.settingsBtn.addEventListener('click', () => {
-    audio.playArcadeSound('click');
-    ui.applySettingsToUI(currentSettings, isMuted, simulateOutage);
-    ui.showSettingsModal();
-    terminal.logToEventStream('settings-opened', { timestamp: Date.now() });
-  });
-}
-
-if (ui.settingsCloseX) {
-  ui.settingsCloseX.addEventListener('click', () => {
-    audio.playArcadeSound('click');
-    ui.hideSettingsModal();
-  });
-}
-
-if (ui.settingsModal) {
-  ui.settingsModal.addEventListener('click', (e) => {
-    if (e.target === ui.settingsModal) {
-      audio.playArcadeSound('click');
-      ui.hideSettingsModal();
-    }
-  });
-}
-
-if (ui.settingSfxToggle) {
-  ui.settingSfxToggle.addEventListener('click', () => {
-    currentSettings.sfxEnabled = !currentSettings.sfxEnabled;
-    isMuted = !currentSettings.sfxEnabled;
-    audio.setAudioMuted(isMuted);
-    audio.setSfxEnabled(currentSettings.sfxEnabled);
-    ui.applySettingsToUI(currentSettings, isMuted, simulateOutage);
-    audio.playArcadeSound('click');
-  });
-}
-
-if (ui.settingVolumeSlider) {
-  ui.settingVolumeSlider.addEventListener('input', (e) => {
-    currentSettings.volume = parseInt(e.target.value, 10);
-    audio.setAudioVolume(currentSettings.volume);
-    ui.applySettingsToUI(currentSettings, isMuted, simulateOutage);
-  });
-  ui.settingVolumeSlider.addEventListener('change', () => {
-    audio.playArcadeSound('click');
-  });
-}
-
-if (ui.settingDifficultySelect) {
-  ui.settingDifficultySelect.addEventListener('change', (e) => {
-    currentSettings.timerDifficulty = parseInt(e.target.value, 10);
-    audio.playArcadeSound('click');
-  });
-}
-
-if (ui.settingCrtToggle) {
-  ui.settingCrtToggle.addEventListener('click', () => {
-    currentSettings.crtEnabled = !currentSettings.crtEnabled;
-    ui.applySettingsToUI(currentSettings, isMuted, simulateOutage);
-    audio.playArcadeSound('click');
-  });
-}
-
-if (ui.settingVfxToggle) {
-  ui.settingVfxToggle.addEventListener('click', () => {
-    currentSettings.vfxEnabled = !currentSettings.vfxEnabled;
-    ui.applySettingsToUI(currentSettings, isMuted, simulateOutage);
-    audio.playArcadeSound('click');
-  });
-}
-
-if (ui.settingApiToggle) {
-  ui.settingApiToggle.addEventListener('click', () => {
-    if (autoAdvanceTimeout) {
-      clearTimeout(autoAdvanceTimeout);
-      autoAdvanceTimeout = null;
-    }
-    currentSettings.simulateOutage = !currentSettings.simulateOutage;
-    simulateOutage = currentSettings.simulateOutage;
-    ui.applySettingsToUI(currentSettings, isMuted, simulateOutage);
-    audio.playArcadeSound('click');
-    window.dispatchEvent(new CustomEvent('interop-mode-changed', {
-      detail: {
-        simulatedOutage: simulateOutage,
-        mode: simulateOutage ? 'SIMULATED_FALLBACK' : 'LIVE_MARCCONRAD'
-      }
-    }));
-    if (ui.gameSection && !ui.gameSection.classList.contains('hidden')) {
-      loadPuzzle();
-    }
-  });
-}
-
-if (ui.settingsSaveBtn) {
-  ui.settingsSaveBtn.addEventListener('click', () => {
-    saveSettingsToStorage();
-    ui.hideSettingsModal();
-    audio.playArcadeSound('coin');
-    window.dispatchEvent(new CustomEvent('settings-updated', { detail: currentSettings }));
-  });
-}
-
-// Modal Retry Button
-if (ui.modalRetryBtn) {
-  ui.modalRetryBtn.addEventListener('click', () => {
-    audio.playArcadeSound('coin');
-    ui.hideGameOverModal();
-    window.dispatchEvent(new CustomEvent('game-start', {
-      detail: { mode: 'ARCADE_RETRY', timestamp: Date.now() }
-    }));
-    loadPuzzle();
-  });
-}
-
-// Modal Menu Button
-if (ui.modalMenuBtn) {
-  ui.modalMenuBtn.addEventListener('click', () => {
-    audio.playArcadeSound('click');
-    ui.hideGameOverModal();
-    ui.switchView('dashboard');
-    refreshLeaderboard();
-    terminal.logToEventStream('nav-dashboard', { action: 'RETURN_FROM_MODAL' });
-  });
-}
-
-// Keypad Button Listeners
-if (ui.keypadButtons) {
-  ui.keypadButtons.forEach((btn) => {
-    btn.addEventListener('click', () => {
-      if (ui.submitGuessBtn.disabled || isSubmitting) return;
-      audio.playArcadeSound('click');
-      ui.guessInput.value = btn.dataset.val;
-      ui.submitGuessBtn.click();
-    });
-  });
-}
-
-// Physical Keyboard Listener
-window.addEventListener('keydown', (event) => {
-  const inGame = ui.gameSection && !ui.gameSection.classList.contains('hidden');
-  const modalOpen = (ui.gameOverModal && !ui.gameOverModal.classList.contains('hidden')) ||
-                    (ui.settingsModal && !ui.settingsModal.classList.contains('hidden'));
-
-  if (inGame && !modalOpen) {
-    if (event.key >= '0' && event.key <= '9') {
-      event.preventDefault(); // Prevents double-typing in input field
-      if (!ui.submitGuessBtn.disabled && !isSubmitting) {
-        audio.playArcadeSound('click');
-        ui.guessInput.value = event.key;
-        ui.submitGuessBtn.click();
-      }
-    } else if (event.key === 'f' || event.key === 'F') {
-      if (ui.apiStatusPill) ui.apiStatusPill.click();
-    }
-  }
-});
-
-// Single digit input sanitization
-if (ui.guessInput) {
-  ui.guessInput.addEventListener('input', (event) => {
-    const sanitized = event.target.value.replace(/[^0-9]/g, '');
-    if (sanitized.length > 0) {
-      event.target.value = sanitized.slice(-1);
-      if (!ui.submitGuessBtn.disabled && !isSubmitting) {
-        audio.playArcadeSound('click');
-        ui.submitGuessBtn.click();
-      }
-    } else {
-      event.target.value = '';
-    }
-  });
-
-  ui.guessInput.addEventListener('keydown', (event) => {
-    if (event.key === 'Enter') {
-      event.preventDefault();
-      if (!ui.submitGuessBtn.disabled && !isSubmitting) {
-        ui.submitGuessBtn.click();
-      }
-    }
-  });
-}
-
-// Registration Button Listener
-if (ui.registerBtn) {
-  ui.registerBtn.addEventListener('click', async () => {
-    audio.playArcadeSound('click');
-    const username = ui.usernameInput.value.trim();
-    const password = ui.passwordInput.value;
-
-    if (!username || !password) {
-      ui.authMessage.style.color = 'var(--arcade-red)';
-      ui.authMessage.textContent = 'ENTER USERNAME & PASSWORD!';
-      return;
-    }
-
-    try {
-      const data = await api.register(username, password);
-      if (data.success) {
-        ui.authMessage.style.color = 'var(--arcade-green)';
-        ui.authMessage.textContent = data.message;
-        window.dispatchEvent(new CustomEvent('auth-register', {
-          detail: { username, status: 'REGISTERED', timestamp: Date.now() }
-        }));
-      } else {
-        ui.authMessage.style.color = 'var(--arcade-red)';
-        ui.authMessage.textContent = data.message || 'REGISTRATION FAILED';
-      }
-    } catch (err) {
-      ui.authMessage.style.color = 'var(--arcade-red)';
-      ui.authMessage.textContent = 'NETWORK ERROR DURING REGISTRATION';
-    }
-  });
-}
-
-// Login Button Listener
-if (ui.loginBtn) {
-  ui.loginBtn.addEventListener('click', async () => {
-    audio.playArcadeSound('coin');
-    const username = ui.usernameInput.value.trim();
-    const password = ui.passwordInput.value;
-
-    if (!username || !password) {
-      ui.authMessage.style.color = 'var(--arcade-red)';
-      ui.authMessage.textContent = 'ENTER USERNAME & PASSWORD!';
-      return;
-    }
-
-    try {
-      const data = await api.login(username, password);
-      if (data.success) {
-        window.dispatchEvent(new CustomEvent('auth-success', {
-          detail: { username: data.username, sessionEstablished: true }
-        }));
-      } else {
-        ui.authMessage.style.color = 'var(--arcade-red)';
-        ui.authMessage.textContent = data.message || 'INVALID CREDENTIALS';
-      }
-    } catch (err) {
-      ui.authMessage.style.color = 'var(--arcade-red)';
-      ui.authMessage.textContent = 'NETWORK ERROR DURING LOGIN';
-    }
-  });
-}
-
-// Start Game Button Listener
-if (ui.startGameBtn) {
-  ui.startGameBtn.addEventListener('click', () => {
-    audio.playArcadeSound('coin');
-    ui.switchView('game');
-    window.dispatchEvent(new CustomEvent('game-start', {
-      detail: { mode: 'ARCADE', player: ui.dashUserSpan ? ui.dashUserSpan.textContent : 'PLAYER_1', timestamp: Date.now() }
-    }));
-    loadPuzzle();
-  });
-}
-
-// Back to Dashboard Button Listener
-if (ui.backToDashBtn) {
-  ui.backToDashBtn.addEventListener('click', () => {
-    audio.playArcadeSound('click');
-    clearInterval(timerInterval);
-    ui.switchView('dashboard');
-    refreshLeaderboard();
-    terminal.logToEventStream('nav-dashboard', { action: 'RETURN_TO_MAIN_MENU' });
-  });
-}
-
-// Reusable Logout Procedure
-async function performLogout() {
+// --- DOM Event Wiring ---
+on(ui.sfxToggleBtn, 'click', () => { if (toggleSfx()) audio.playArcadeSound('coin'); });
+on(ui.apiStatusPill, 'click', () => {
+  gameState.clearAutoAdvance();
+  settings.toggleSimulateOutage();
+  settings.saveSettingsToStorage();
+  syncSettingsUI();
   audio.playArcadeSound('click');
-  try {
-    await api.logout();
-  } catch (err) {
-    console.error('Logout request failed:', err);
-  }
-  clearInterval(timerInterval);
-  window.dispatchEvent(new CustomEvent('auth-logout', {
-    detail: { status: 'SESSION_DESTROYED' }
-  }));
-}
+  loadPuzzle();
+});
 
-if (ui.logoutBtn) ui.logoutBtn.addEventListener('click', performLogout);
-if (ui.dashLogoutBtn) ui.dashLogoutBtn.addEventListener('click', performLogout);
+on(ui.settingsBtn, 'click', () => { audio.playArcadeSound('click'); syncSettingsUI(); ui.showSettingsModal(); });
+on(ui.settingsCloseX, 'click', () => { audio.playArcadeSound('click'); ui.hideSettingsModal(); });
+on(ui.settingsModal, 'click', (e) => e.target === ui.settingsModal && (audio.playArcadeSound('click'), ui.hideSettingsModal()));
+on(ui.settingSfxToggle, 'click', () => { toggleSfx(); audio.playArcadeSound('click'); });
+on(ui.settingVolumeSlider, 'input', (e) => { settings.updateSetting('volume', +e.target.value); audio.setAudioVolume(+e.target.value); syncSettingsUI(); });
+on(ui.settingVolumeSlider, 'change', () => audio.playArcadeSound('click'));
+on(ui.settingDifficultySelect, 'change', (e) => { settings.updateSetting('timerDifficulty', +e.target.value); audio.playArcadeSound('click'); });
+on(ui.settingCrtToggle, 'click', () => { settings.toggleCrtEnabled(); syncSettingsUI(); audio.playArcadeSound('click'); });
+on(ui.settingVfxToggle, 'click', () => { settings.toggleVfxEnabled(); syncSettingsUI(); audio.playArcadeSound('click'); });
+on(ui.settingApiToggle, 'click', () => { gameState.clearAutoAdvance(); settings.toggleSimulateOutage(); syncSettingsUI(); audio.playArcadeSound('click'); if (ui.gameSection && !ui.gameSection.classList.contains('hidden')) loadPuzzle(); });
+on(ui.settingsSaveBtn, 'click', () => { settings.saveSettingsToStorage(); ui.hideSettingsModal(); audio.playArcadeSound('coin'); });
 
-// Fetch New Puzzle Button
-if (ui.fetchPuzzleBtn) {
-  ui.fetchPuzzleBtn.addEventListener('click', () => {
-    if (autoAdvanceTimeout) {
-      clearTimeout(autoAdvanceTimeout);
-      autoAdvanceTimeout = null;
-    }
+on(ui.modalRetryBtn, 'click', () => { audio.playArcadeSound('coin'); ui.hideGameOverModal(); window.dispatchEvent(new CustomEvent('game-start', { detail: { mode: 'ARCADE_RETRY', timestamp: Date.now() } })); loadPuzzle(); });
+on(ui.modalMenuBtn, 'click', () => { audio.playArcadeSound('click'); ui.hideGameOverModal(); ui.switchView('dashboard'); refreshLeaderboard(); });
+
+ui.keypadButtons?.forEach((btn) => {
+  on(btn, 'click', () => {
+    if (ui.submitGuessBtn.disabled || gameState.isSubmittingGuess()) return;
     audio.playArcadeSound('click');
-    loadPuzzle();
+    ui.guessInput.value = btn.dataset.val;
+    ui.submitGuessBtn.click();
   });
-}
+});
 
-// Submit Answer Guess Button
-if (ui.submitGuessBtn) {
-  ui.submitGuessBtn.addEventListener('click', async () => {
-    if (isSubmitting || ui.submitGuessBtn.disabled) return;
-    const guess = ui.guessInput.value.trim();
-
-    if (guess === '') {
-      ui.messageBox.style.color = 'var(--arcade-yellow)';
-      ui.messageBox.textContent = 'PLEASE ENTER OR CLICK A DIGIT 0-9';
-      return;
+window.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') return ui.settingsModal?.classList.contains('hidden') || ui.hideSettingsModal();
+  const inGame = ui.gameSection && !ui.gameSection.classList.contains('hidden');
+  const modalOpen = (ui.gameOverModal && !ui.gameOverModal.classList.contains('hidden')) || (ui.settingsModal && !ui.settingsModal.classList.contains('hidden'));
+  if (inGame && !modalOpen) {
+    if (e.key >= '0' && e.key <= '9' && !ui.submitGuessBtn.disabled && !gameState.isSubmittingGuess()) {
+      e.preventDefault();
+      audio.playArcadeSound('click');
+      ui.guessInput.value = e.key;
+      ui.submitGuessBtn.click();
+    } else if (e.key.toLowerCase() === 'f') {
+      ui.apiStatusPill?.click();
     }
+  }
+});
 
-    isSubmitting = true;
-    ui.submitGuessBtn.disabled = true;
-    ui.guessInput.disabled = true;
+on(ui.guessInput, 'input', (e) => {
+  const s = e.target.value.replace(/[^0-9]/g, '');
+  e.target.value = s.length > 0 ? s.slice(-1) : '';
+  if (e.target.value && !ui.submitGuessBtn.disabled && !gameState.isSubmittingGuess()) {
+    audio.playArcadeSound('click');
+    ui.submitGuessBtn.click();
+  }
+});
 
-    try {
-      const result = await api.checkAnswer(guess);
+on(ui.guessInput, 'keydown', (e) => e.key === 'Enter' && !ui.submitGuessBtn.disabled && !gameState.isSubmittingGuess() && (e.preventDefault(), ui.submitGuessBtn.click()));
 
-      window.dispatchEvent(new CustomEvent('guess-evaluated', {
-        detail: { guess: parseInt(guess, 10), correct: result.correct, message: result.message }
-      }));
-    } catch (err) {
-      console.error('Answer check error:', err);
-      terminal.logToErrorStream(
-        'CHECK_ANSWER_NETWORK_ERROR',
-        { error: err.message || String(err), guess },
-        'Failed to submit answer to /api/check-answer'
-      );
-      ui.submitGuessBtn.disabled = false;
-      ui.guessInput.disabled = false;
-    } finally {
-      isSubmitting = false;
-    }
-  });
-}
+on(ui.togglePasswordBtn, 'click', () => {
+  audio.playArcadeSound('click');
+  const isPwd = ui.passwordInput.type === 'password';
+  ui.passwordInput.type = isPwd ? 'text' : 'password';
+  ui.togglePasswordBtn.textContent = isPwd ? '🔒' : '👁️';
+});
+on(ui.usernameInput, 'keydown', (e) => e.key === 'Enter' && (e.preventDefault(), ui.passwordInput?.focus()));
+on(ui.passwordInput, 'keydown', (e) => e.key === 'Enter' && (e.preventDefault(), ui.loginBtn?.click()));
 
-// Session Reconnection on Client Startup
-async function checkExistingSession() {
+async function submitAuth(isLogin) {
+  const [u, p] = [ui.usernameInput.value.trim(), ui.passwordInput.value];
+  if (!u || !p) {
+    ui.authMessage.style.color = 'var(--arcade-red)';
+    ui.authMessage.textContent = 'ENTER USERNAME & PASSWORD!';
+    return;
+  }
   try {
-    const sessionData = await api.checkSession();
-    if (sessionData.loggedIn) {
-      window.dispatchEvent(new CustomEvent('auth-success', {
-        detail: { username: sessionData.username, reconnected: true }
-      }));
-    } else {
-      ui.switchView('login');
+    const data = isLogin ? await api.login(u, p) : await api.register(u, p);
+    ui.authMessage.style.color = data.success ? 'var(--arcade-green)' : 'var(--arcade-red)';
+    ui.authMessage.textContent = data.message || (data.success ? (isLogin ? '' : 'REGISTERED') : 'FAILED');
+    if (data.success) {
+      window.dispatchEvent(new CustomEvent(isLogin ? 'auth-success' : 'auth-register', { detail: { username: u, ...data } }));
     }
-  } catch (err) {
-    ui.switchView('login');
+  } catch {
+    ui.authMessage.style.color = 'var(--arcade-red)';
+    ui.authMessage.textContent = 'NETWORK ERROR DURING AUTHENTICATION';
   }
 }
 
-// Initialize settings and session state on boot
-loadSavedSettings();
+on(ui.registerBtn, 'click', () => { audio.playArcadeSound('click'); submitAuth(false); });
+on(ui.loginBtn, 'click', () => { audio.playArcadeSound('coin'); submitAuth(true); });
+on(ui.startGameBtn, 'click', () => { audio.playArcadeSound('coin'); ui.switchView('game'); window.dispatchEvent(new CustomEvent('game-start', { detail: { mode: 'ARCADE', player: ui.dashUserSpan ? ui.dashUserSpan.textContent : 'PLAYER_1', timestamp: Date.now() } })); loadPuzzle(); });
+on(ui.backToDashBtn, 'click', () => { audio.playArcadeSound('click'); gameState.stopTimerInterval(); ui.switchView('dashboard'); refreshLeaderboard(); });
+[ui.logoutBtn, ui.dashLogoutBtn].forEach((btn) => on(btn, 'click', performLogout));
+on(ui.fetchPuzzleBtn, 'click', () => { gameState.clearAutoAdvance(); audio.playArcadeSound('click'); loadPuzzle(); });
+
+on(ui.submitGuessBtn, 'click', async () => {
+  if (gameState.isSubmittingGuess() || ui.submitGuessBtn.disabled) return;
+  const guess = ui.guessInput.value.trim();
+  if (!guess) {
+    ui.messageBox.style.color = 'var(--arcade-yellow)';
+    ui.messageBox.textContent = 'PLEASE ENTER OR CLICK A DIGIT 0-9';
+    return;
+  }
+  gameState.setIsSubmitting(true);
+  ui.submitGuessBtn.disabled = ui.guessInput.disabled = true;
+  try {
+    const res = await api.checkAnswer(guess);
+    window.dispatchEvent(new CustomEvent('guess-evaluated', { detail: { guess: parseInt(guess, 10), correct: res.correct, message: res.message } }));
+  } catch (err) {
+    console.error('Answer check error:', err);
+    ui.submitGuessBtn.disabled = ui.guessInput.disabled = false;
+  } finally {
+    gameState.setIsSubmitting(false);
+  }
+});
+
+// --- Bootstrapping ---
+initSettings();
 checkExistingSession();

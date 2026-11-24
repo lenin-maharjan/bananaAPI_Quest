@@ -1,6 +1,16 @@
 // ====================================================
-// MODULE: API SERVICE LAYER (REST CLIENT)
-// THEME 2: INTEROPERABILITY (BACKEND PROXY & AUTH CONSUMPTION)
+// File: public/js/api.js
+// Author: Lenin Maharjan (Student ID: 2425736)
+// Module: CIS046-3 Software for Enterprise AY 26/27
+//
+// Authorship & AI Assistance Disclosure:
+// - REST client service layer and asynchronous error handling designed by the Author.
+// - Implementation drafted and refactored with generative AI assistance
+//   (Gemini 3.8 / Google Antigravity IDE).
+// - All API contracts and request/response payloads verified by the Author.
+//
+// External References & Documentation:
+// - Fetch API: https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API
 // ====================================================
 
 /**

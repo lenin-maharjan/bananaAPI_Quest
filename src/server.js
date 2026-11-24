@@ -1,6 +1,17 @@
 // ====================================================
-// SERVER ENTRY POINT: SCALABLE MODULAR MVC ARCHITECTURE
-// THEME 1: MODULAR COMPONENT ORGANIZATION (SRC ENCAPSULATION)
+// File: src/server.js
+// Author: Lenin Maharjan (Student ID: 2425736)
+// Module: CIS046-3 Software for Enterprise AY 26/27
+//
+// Authorship & AI Assistance Disclosure:
+// - Server architecture, middleware pipeline, and modular routing designed by the Author.
+// - Implementation drafted and refactored with generative AI assistance
+//   (Gemini 3.8 / Google Antigravity IDE).
+// - All code manually reviewed, debugged, and verified by the Author.
+//
+// External References & Documentation:
+// - Express Framework: https://expressjs.com/
+// - express-session (Session Cookies): https://github.com/expressjs/session
 // ====================================================
 
 // Import path module to resolve filesystem directories reliably
@@ -62,8 +73,13 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Start the HTTP server on the configured port
-app.listen(PORT, () => {
-  // Output confirmation to console
-  console.log(`Server is running at http://localhost:${PORT}`);
-});
+// Start the HTTP server on the configured port when executed directly
+if (require.main === module) {
+  app.listen(PORT, () => {
+    // Output confirmation to console
+    console.log(`Server is running at http://localhost:${PORT}`);
+  });
+}
+
+// Export Express app instance for automated testing
+module.exports = app;

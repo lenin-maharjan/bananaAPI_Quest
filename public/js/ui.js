@@ -1,6 +1,16 @@
 // ====================================================
-// MODULE: UI PRESENTATION & DOM MANIPULATION
-// THEME 3: EVENT-DRIVEN PROGRAMMING & GAME JUICE
+// File: public/js/ui.js
+// Author: Lenin Maharjan (Student ID: 2425736)
+// Module: CIS046-3 Software for Enterprise AY 26/27
+//
+// Authorship & AI Assistance Disclosure:
+// - UI state transitions, DOM manipulation methods, and screen effects designed by the Author.
+// - Implementation drafted and refactored with generative AI assistance
+//   (Gemini 3.8 / Google Antigravity IDE).
+// - All DOM bindings and view switching logic verified by the Author.
+//
+// External References & Documentation:
+// - DOM Manipulation: https://developer.mozilla.org/en-US/docs/Web/API/Document_Object_Model
 // ====================================================
 
 // Cache DOM element references for all 3 view sections
@@ -11,6 +21,7 @@ export const gameSection = document.getElementById('game-section');
 // Cache authentication inputs and buttons
 export const usernameInput = document.getElementById('username');
 export const passwordInput = document.getElementById('password');
+export const togglePasswordBtn = document.getElementById('toggle-password-btn');
 export const loginBtn = document.getElementById('login-btn');
 export const registerBtn = document.getElementById('register-btn');
 export const authMessage = document.getElementById('auth-message');
@@ -31,6 +42,7 @@ export const scoreDisplay = document.getElementById('score-display');
 export const timerDisplay = document.getElementById('timer-display');
 export const livesDisplay = document.getElementById('lives-display');
 export const puzzleImg = document.getElementById('puzzle-img');
+export const puzzleLoadingIndicator = document.getElementById('puzzle-loading-indicator');
 export const fetchPuzzleBtn = document.getElementById('fetch-puzzle-btn');
 export const guessContainer = document.getElementById('guess-container');
 export const guessInput = document.getElementById('guess-input');
@@ -99,17 +111,20 @@ export function updateScoreDisplay(currentScore) {
 }
 
 /**
- * Updates the timer badge in the HUD
+ * Updates the timer badge in the HUD with dynamic color stages
  * @param {number} seconds
  * @param {boolean} [isPanic=false]
  */
 export function updateTimerDisplay(seconds, isPanic = false) {
   if (!timerDisplay) return;
   timerDisplay.textContent = `TIME: ${seconds}s`;
+  timerDisplay.classList.remove('panic-pulse', 'timer-safe', 'timer-warn');
   if (isPanic) {
     timerDisplay.classList.add('panic-pulse');
+  } else if (seconds > 20) {
+    timerDisplay.classList.add('timer-safe');
   } else {
-    timerDisplay.classList.remove('panic-pulse');
+    timerDisplay.classList.add('timer-warn');
   }
 }
 
@@ -180,8 +195,21 @@ export function updateApiStatusPill(source, simulateOutage = false) {
   const isFallback = source === 'FALLBACK_CACHE' || simulateOutage;
   apiStatusPill.className = isFallback ? 'api-status-pill api-fallback' : 'api-status-pill api-live';
   apiStatusPill.textContent = isFallback
-    ? '[ 🟠 OFFLINE CACHE (AUTO-RECOVERING) ]'
-    : '[ 🟢 LIVE API (CLICK TO TEST OFFLINE MODE) ]';
+    ? '[ 🟠 OFFLINE // CACHE ]'
+    : '[ 🟢 ONLINE // LIVE ]';
+}
+
+/**
+ * Shows or hides the loading state in the puzzle monitor
+ * @param {boolean} isLoading
+ */
+export function setPuzzleLoading(isLoading) {
+  if (puzzleLoadingIndicator) {
+    puzzleLoadingIndicator.classList.toggle('hidden', !isLoading);
+  }
+  if (puzzleImg && isLoading) {
+    puzzleImg.classList.add('hidden');
+  }
 }
 
 /**
@@ -198,18 +226,19 @@ export function renderLeaderboard(leaderboard) {
     }
 
     leaderboardList.innerHTML = leaderboard.map((entry, index) => {
+      const rankBadge = index === 0 ? '🥇 #1' : index === 1 ? '🥈 #2' : index === 2 ? '🥉 #3' : `#${index + 1}`;
       const rankClass = index === 0 ? 'rank-1' : index === 1 ? 'rank-2' : index === 2 ? 'rank-3' : 'rank-default';
       const score = entry.high_score || entry.best_score || 0;
       return `
         <div class="leaderboard-row">
-          <span class="${rankClass}">#${index + 1}</span>
+          <span class="${rankClass}">${rankBadge}</span>
           <span class="${rankClass}">${entry.username}</span>
           <span class="score-gold">${String(score).padStart(4, '0')} PTS</span>
         </div>
       `;
     }).join('');
   } else {
-    leaderboardList.innerHTML = '<div style="text-align: center; color: #64748b; font-size: 0.65rem; padding: 10px;">NO HIGH SCORES RECORDED YET</div>';
+    leaderboardList.innerHTML = '<div style="text-align: center; color: #64748b; font-size: 0.65rem; padding: 14px;">NO HIGH SCORES RECORDED YET — PLAY TO CLAIM #1!</div>';
   }
 }
 

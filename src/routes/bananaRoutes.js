@@ -1,7 +1,16 @@
 // ====================================================
-// ROUTES: BANANA GAMEPLAY & INTEROPERABILITY
-// THEME 2: INTEROPERABILITY ROUTING
-// THEME 4: ACCESS CONTROL VIA SECURITY MIDDLEWARE & PERSISTENCE
+// File: src/routes/bananaRoutes.js
+// Author: Lenin Maharjan (Student ID: 2425736)
+// Module: CIS046-3 Software for Enterprise AY 26/27
+//
+// Authorship & AI Assistance Disclosure:
+// - Game and interoperability route configuration and security protection designed by the Author.
+// - Implementation drafted and refactored with generative AI assistance
+//   (Gemini 3.8 / Google Antigravity IDE).
+// - All route guards verified by the Author.
+//
+// External References & Documentation:
+// - Express Router: https://expressjs.com/en/guide/routing.html
 // ====================================================
 
 // Import Express framework to access the Router module

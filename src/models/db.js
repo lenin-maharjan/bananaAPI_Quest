@@ -1,7 +1,17 @@
 // ====================================================
-// DATABASE MODEL: PERSISTENT SQLITE STORAGE
-// THEME 4: VIRTUAL IDENTITY (CREDENTIAL PERSISTENCE)
-// THEME 1: DATA PERSISTENCE & SCORES SCHEMA
+// File: src/models/db.js
+// Author: Lenin Maharjan (Student ID: 2425736)
+// Module: CIS046-3 Software for Enterprise AY 26/27
+//
+// Authorship & AI Assistance Disclosure:
+// - Database schema design, table relationships, and index strategy designed by the Author.
+// - Implementation drafted and refactored with generative AI assistance
+//   (Gemini 3.8 / Google Antigravity IDE).
+// - All SQL statements, constraints, and data flows verified by the Author.
+//
+// External References & Documentation:
+// - SQLite3 Node.js Driver: https://github.com/TryGhost/node-sqlite3
+// - SQLite Documentation: https://www.sqlite.org/docs.html
 // ====================================================
 
 // Import path module to resolve cross-platform absolute filesystem paths

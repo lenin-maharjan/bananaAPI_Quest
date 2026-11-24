@@ -1,6 +1,16 @@
 // ====================================================
-// MODULE: 8-BIT PROCEDURAL AUDIO SYNTHESIZER
-// THEME 3: EVENT-DRIVEN PROGRAMMING (WEB AUDIO API SYNTH)
+// File: public/js/audio.js
+// Author: Lenin Maharjan (Student ID: 2425736)
+// Module: CIS046-3 Software for Enterprise AY 26/27
+//
+// Authorship & AI Assistance Disclosure:
+// - Procedural Web Audio API sound generator and sound profiles designed by the Author.
+// - Implementation drafted and refactored with generative AI assistance
+//   (Gemini 3.8 / Google Antigravity IDE).
+// - All synthesizer oscillators and gain envelopes verified by the Author.
+//
+// External References & Documentation:
+// - Web Audio API: https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API
 // ====================================================
 
 export let audioCtx = null;

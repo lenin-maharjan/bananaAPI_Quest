@@ -1,7 +1,16 @@
 // ====================================================
-// CONTROLLER: BANANA GAME, SCORES & LEADERBOARD
-// THEME 2: INTEROPERABILITY (HTTP LAYER FOR PUZZLE SERVICE)
-// THEME 4: VIRTUAL IDENTITY & PERSISTENT LEADERBOARD
+// File: src/controllers/bananaController.js
+// Author: Lenin Maharjan (Student ID: 2425736)
+// Module: CIS046-3 Software for Enterprise AY 26/27
+//
+// Authorship & AI Assistance Disclosure:
+// - Controller orchestration, solution validation, and scoring integration designed by the Author.
+// - Implementation drafted and refactored with generative AI assistance
+//   (Gemini 3.8 / Google Antigravity IDE).
+// - All validation rules and leaderboard SQL logic verified by the Author.
+//
+// External References & Documentation:
+// - Express Response JSON API: https://expressjs.com/en/4x/api.html#res.json
 // ====================================================
 
 // Import SQLite database instance for leaderboard persistence
@@ -24,6 +33,7 @@ exports.getPuzzle = async (req, res) => {
 
     // Return puzzle question asset, provenance source, and queue hints
     return res.json({
+      success: true,
       question: puzzle.question,
       source: puzzle.source,
       prefetched: puzzle.prefetched,
