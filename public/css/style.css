@@ -39,7 +39,7 @@ body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  padding: 24px;
+  padding: 24px 16px;
   overflow-x: hidden;
 }
 
@@ -47,25 +47,25 @@ body {
 /* 90s ARCADE MARQUEE TOP HEADER                        */
 /* ==================================================== */
 .marquee-header {
-  max-width: 1400px;
+  max-width: 900px;
   width: 94vw;
-  margin: 0 auto 28px auto;
+  margin: 0 auto 24px auto;
   background: #090e17;
   border: 4px solid var(--arcade-yellow);
   box-shadow: 0 0 20px rgba(255, 230, 0, 0.45), inset 0 0 14px rgba(0, 0, 0, 0.8);
   border-radius: 10px;
-  padding: 18px 28px;
+  padding: 18px 24px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 20px;
+  gap: 18px;
   flex-wrap: wrap;
 }
 
 .marquee-stats-group {
   display: flex;
   align-items: center;
-  gap: 28px;
+  gap: 24px;
   flex-wrap: wrap;
 }
 
@@ -76,7 +76,7 @@ body {
 }
 
 .marquee-label {
-  font-size: 0.65rem;
+  font-size: 0.62rem;
   color: var(--arcade-red);
   letter-spacing: 1.2px;
 }
@@ -98,10 +98,10 @@ body {
 
 .cabinet-title {
   text-align: center;
-  font-size: 1.35rem;
+  font-size: 1.25rem;
   color: var(--arcade-cyan);
   text-shadow: 2px 2px 0px #000, 0 0 12px rgba(0, 240, 255, 0.7);
-  letter-spacing: 2.5px;
+  letter-spacing: 2.2px;
   margin: 0;
 }
 
@@ -112,23 +112,16 @@ body {
 }
 
 /* ==================================================== */
-/* TWO-COLUMN DASHBOARD LAYOUT                          */
+/* CENTERED ARCADE CABINET DASHBOARD LAYOUT             */
 /* ==================================================== */
 .dashboard-layout {
-  display: grid;
-  grid-template-columns: 1.25fr 0.95fr;
-  gap: 32px;
-  max-width: 1400px;
+  display: block;
+  max-width: 900px;
   width: 94vw;
-  margin: 0 auto;
-  align-items: start;
+  margin: 0 auto 40px auto;
 }
 
-@media (max-width: 1024px) {
-  .dashboard-layout {
-    grid-template-columns: 1fr;
-    gap: 24px;
-  }
+@media (max-width: 768px) {
   .marquee-header {
     flex-direction: column;
     text-align: center;
@@ -142,18 +135,18 @@ body {
 .card {
   background: #0c121e;
   border: 4px solid var(--arcade-cyan);
-  border-radius: 10px;
-  box-shadow: 6px 6px 0px #000, 0 0 20px rgba(0, 240, 255, 0.25);
-  padding: 32px 36px;
+  border-radius: 12px;
+  box-shadow: 6px 6px 0px #000, 0 0 25px rgba(0, 240, 255, 0.25);
+  padding: 32px 34px;
   position: relative;
 }
 
 .card h2 {
-  font-size: 1rem;
+  font-size: 1.05rem;
   color: var(--arcade-yellow);
   text-transform: uppercase;
   letter-spacing: 1.5px;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
   text-shadow: 2px 2px 0px #000;
 }
 
@@ -162,7 +155,24 @@ body {
   font-size: 1.25rem;
   color: #94a3b8;
   letter-spacing: 1px;
-  margin-bottom: 24px;
+  margin-bottom: 22px;
+}
+
+.card-arcade-header {
+  text-align: center;
+  margin-bottom: 22px;
+}
+
+.arcade-insert-coin-badge {
+  display: inline-block;
+  font-size: 0.65rem;
+  color: var(--arcade-yellow);
+  border: 2px solid var(--arcade-yellow);
+  padding: 4px 10px;
+  border-radius: 4px;
+  margin-bottom: 12px;
+  background: rgba(255, 230, 0, 0.1);
+  letter-spacing: 1.5px;
 }
 
 /* Inputs & Form Groups */
@@ -197,176 +207,264 @@ input[type="text"]:focus, input[type="password"]:focus {
   box-shadow: 0 0 12px rgba(255, 230, 0, 0.5), inset 3px 3px 0px #000;
 }
 
+.password-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.password-input-wrapper input {
+  padding-right: 48px;
+}
+
+.password-toggle-btn {
+  position: absolute;
+  right: 12px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 1.15rem;
+  padding: 4px;
+  line-height: 1;
+  color: #94a3b8;
+  transition: transform 0.1s ease;
+  box-shadow: none;
+  width: auto;
+}
+
+.password-toggle-btn:hover {
+  transform: scale(1.2);
+  background: transparent;
+}
+
 .auth-btn-row {
   display: flex;
   gap: 16px;
-  margin-top: 24px;
+  margin-top: 14px;
+}
+
+.auth-btn-row button {
+  flex: 1;
+}
+
+.auth-primary-btn {
+  background: linear-gradient(to bottom, #39ff14, #16a34a) !important;
+  color: #000 !important;
+}
+
+.auth-primary-btn:hover {
+  background: #fff !important;
+  box-shadow: 0 0 20px var(--arcade-green) !important;
+}
+
+.auth-secondary-btn {
+  background: linear-gradient(to bottom, #00f0ff, #0284c7) !important;
+  color: #000 !important;
+}
+
+.auth-secondary-btn:hover {
+  background: #fff !important;
+  box-shadow: 0 0 20px var(--arcade-cyan) !important;
+}
+
+.auth-helper-pill {
+  margin-top: 18px;
+  background: rgba(30, 41, 59, 0.6);
+  border: 1px dashed rgba(0, 240, 255, 0.35);
+  border-radius: 6px;
+  padding: 12px 16px;
+  font-size: 0.62rem;
+  line-height: 1.5;
+  color: #94a3b8;
+  text-align: center;
+}
+
+.auth-helper-pill strong {
+  color: var(--arcade-cyan);
 }
 
 /* ==================================================== */
-/* 90s ARCADE CHUNKY 3D BUTTONS                         */
+/* GENERAL BUTTON STYLING (CHUNKY 90s RETRO BEVELS)     */
 /* ==================================================== */
 button {
+  background: linear-gradient(to bottom, #00f0ff, #0099bb);
+  color: #000;
   font-family: var(--font-arcade);
-  font-size: 0.76rem;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  padding: 16px;
-  border: 3px solid #000;
+  font-size: 0.72rem;
+  padding: 14px 18px;
+  border: 3px solid #fff;
   border-radius: 6px;
-  box-shadow: 0 5px 0 #000, 0 8px 0 rgba(0,0,0,0.5);
+  box-shadow: 4px 4px 0px #000;
   cursor: pointer;
+  text-transform: uppercase;
+  transition: transform 0.08s ease, box-shadow 0.08s ease, background 0.1s;
   width: 100%;
-  transition: all 0.08s ease;
-  position: relative;
+}
+
+button:hover {
+  background: #ffffff;
+  color: #000;
+  box-shadow: 6px 6px 0px #000, 0 0 14px rgba(0, 240, 255, 0.6);
+  transform: translateY(-2px);
 }
 
 button:active {
-  transform: translateY(4px);
-  box-shadow: 0 1px 0 #000;
-}
-
-#login-btn {
-  background: linear-gradient(to bottom, #ffe600, #d4ac0d);
-  color: #000;
-}
-
-#register-btn {
-  background: linear-gradient(to bottom, #ff007f, #c2005f);
-  color: #fff;
-}
-
-#start-game-btn {
-  background: linear-gradient(to bottom, #39ff14, #27ae60);
-  color: #000;
-  font-size: 0.95rem;
-  padding: 18px;
-  margin: 20px 0 28px 0;
-  border-radius: 8px;
-  border: 3px solid #fff;
-  animation: pulseCabinet 1.5s infinite alternate;
-}
-
-@keyframes pulseCabinet {
-  from { box-shadow: 0 5px 0 #000, 0 0 10px rgba(57, 255, 20, 0.4); }
-  to { box-shadow: 0 5px 0 #000, 0 0 25px rgba(57, 255, 20, 0.8); }
-}
-
-#fetch-puzzle-btn {
-  background: linear-gradient(to bottom, #00f0ff, #0099cc);
-  color: #000;
-}
-
-.danger-btn {
-  background: linear-gradient(to bottom, #ff3131, #b91c1c) !important;
-  color: #fff !important;
+  box-shadow: 1px 1px 0px #000;
+  transform: translateY(2px);
 }
 
 button:disabled {
-  opacity: 0.4;
+  opacity: 0.45;
   cursor: not-allowed;
-  transform: none !important;
+  transform: none;
+  box-shadow: 2px 2px 0px #000;
 }
 
-/* ==================================================== */
-/* 90s ARCADE CABINET BUTTON KEYPAD (0-9)               */
-/* ==================================================== */
-.visually-hidden-inputs {
-  position: absolute !important;
-  width: 1px !important;
-  height: 1px !important;
-  padding: 0 !important;
-  margin: -1px !important;
-  overflow: hidden !important;
-  clip: rect(0, 0, 0, 0) !important;
-  white-space: nowrap !important;
-  border: 0 !important;
-  opacity: 0 !important;
-  pointer-events: none !important;
-}
-
-.arcade-keypad {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 14px;
-  margin: 14px 0 24px 0;
-}
-
-.keypad-btn {
-  background: radial-gradient(circle at 35% 35%, #00f0ff, #005577);
+.danger-btn {
+  background: linear-gradient(to bottom, #ff3131, #aa0000);
   color: #fff;
-  font-size: 1.15rem;
-  padding: 16px 0;
+}
+
+.danger-btn:hover {
+  background: #fff;
+  color: var(--arcade-red);
+  box-shadow: 6px 6px 0px #000, 0 0 14px rgba(255, 49, 49, 0.6);
+}
+
+/* ==================================================== */
+/* SCREEN 2: PLAYER HQ DASHBOARD LAYOUT                 */
+/* ==================================================== */
+.player-profile-strip {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
+.profile-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.65rem;
+}
+
+.profile-label {
+  color: #94a3b8;
+  letter-spacing: 0.5px;
+}
+
+.badge-status-online {
+  background: rgba(57, 255, 20, 0.15);
+  border: 1px solid var(--arcade-green);
+  color: var(--arcade-green);
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.6rem;
+  letter-spacing: 1px;
+}
+
+.big-arcade-start-btn {
+  width: 100%;
+  padding: 22px 24px;
+  font-size: 1.12rem;
+  background: linear-gradient(to bottom, #ffe600, #f59e0b);
+  color: #000;
+  border: 4px solid #fff;
   border-radius: 8px;
-  border: 3px solid #002233;
-  box-shadow: 0 5px 0 #001122, inset 1px 1px 2px #fff;
+  box-shadow: 0 0 25px rgba(255, 230, 0, 0.55), 6px 6px 0px #000;
   cursor: pointer;
-  text-shadow: 1px 1px 0px #000;
-  transition: all 0.08s ease;
+  font-family: var(--font-arcade);
+  letter-spacing: 2px;
+  margin: 18px 0 26px 0;
+  transition: transform 0.1s ease, box-shadow 0.15s ease, background 0.1s;
 }
 
-.keypad-btn:hover {
-  background: radial-gradient(circle at 35% 35%, #33f5ff, #0077aa);
+.big-arcade-start-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 35px rgba(255, 230, 0, 0.8), 8px 8px 0px #000;
+  background: #fff;
 }
 
-.keypad-btn:active {
-  transform: translateY(4px);
-  box-shadow: 0 1px 0 #001122;
+.big-arcade-start-btn:active {
+  transform: translateY(2px);
+  box-shadow: 0 0 15px rgba(255, 230, 0, 0.4), 2px 2px 0px #000;
 }
 
-/* Bottom Utility Navigation Bar */
-.game-bottom-nav {
+/* Quick How to Play Guide */
+.how-to-play-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 14px;
-  margin-top: 20px;
+  margin-bottom: 26px;
 }
 
-.game-bottom-nav button {
-  margin-top: 0 !important;
-  border-radius: 6px;
-}
-
-@media (max-width: 650px) {
-  .game-bottom-nav {
+@media (max-width: 720px) {
+  .how-to-play-grid {
     grid-template-columns: 1fr;
   }
 }
 
-/* ==================================================== */
-/* HALL OF FAME / TOP 5 HIGH SCORES TABLE               */
-/* ==================================================== */
+.how-to-card {
+  background: rgba(15, 23, 42, 0.85);
+  border: 2px solid #334155;
+  border-radius: 8px;
+  padding: 16px 12px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 3px 3px 0px #000;
+}
+
+.how-to-icon {
+  font-size: 1.5rem;
+}
+
+.how-to-title {
+  font-size: 0.65rem;
+  color: var(--arcade-cyan);
+  letter-spacing: 1px;
+}
+
+.how-to-desc {
+  font-size: 0.55rem;
+  color: #94a3b8;
+  line-height: 1.45;
+}
+
+/* Leaderboard Cabinet Styling */
 .leaderboard-section-wrapper {
-  margin-top: 24px;
+  margin-top: 10px;
+  margin-bottom: 24px;
 }
 
 .leaderboard-title {
-  font-size: 0.76rem;
+  font-size: 0.82rem;
   color: var(--arcade-yellow);
   margin-bottom: 12px;
-  text-transform: uppercase;
   letter-spacing: 1px;
 }
 
 .leaderboard-cabinet {
-  background: #04070e;
+  background: #05080f;
   border: 3px solid var(--cabinet-gold);
   border-radius: 8px;
-  box-shadow: inset 0 0 16px rgba(0, 0, 0, 0.9), 0 0 12px rgba(251, 191, 36, 0.2);
-  padding: 16px 20px;
-  margin-top: 10px;
+  padding: 14px;
+  box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.9), 0 0 15px rgba(251, 191, 36, 0.25);
 }
 
 .leaderboard-header {
   display: grid;
-  grid-template-columns: 80px 1fr 140px;
-  align-items: center;
-  border-bottom: 2px solid var(--cabinet-gold);
-  padding: 12px 18px;
-  margin-bottom: 6px;
-  font-size: 0.72rem;
-  color: var(--arcade-red);
-  letter-spacing: 1.5px;
+  grid-template-columns: 1.2fr 2.5fr 1.8fr;
+  padding: 10px 14px;
+  border-bottom: 2px solid rgba(251, 191, 36, 0.35);
+  font-size: 0.65rem;
+  color: var(--arcade-yellow);
+  letter-spacing: 1px;
 }
 
 .leaderboard-header span:last-child {
@@ -375,22 +473,11 @@ button:disabled {
 
 .leaderboard-row {
   display: grid;
-  grid-template-columns: 80px 1fr 140px;
+  grid-template-columns: 1.2fr 2.5fr 1.8fr;
+  padding: 12px 14px;
+  font-size: 0.65rem;
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.08);
   align-items: center;
-  padding: 14px 18px;
-  border-bottom: 1px dashed rgba(30, 41, 59, 0.8);
-  font-family: var(--font-arcade);
-  font-size: 0.72rem;
-  border-radius: 4px;
-  transition: background 0.15s ease;
-}
-
-.leaderboard-row:nth-child(even) {
-  background: rgba(255, 255, 255, 0.02);
-}
-
-.leaderboard-row:hover {
-  background: rgba(251, 191, 36, 0.08);
 }
 
 .leaderboard-row:last-child {
@@ -401,14 +488,14 @@ button:disabled {
   text-align: right;
 }
 
-.rank-1 { color: var(--arcade-yellow); text-shadow: 0 0 5px var(--arcade-yellow); }
+.rank-1 { color: var(--arcade-yellow); text-shadow: 0 0 5px var(--arcade-yellow); font-weight: bold; }
 .rank-2 { color: var(--arcade-cyan); }
 .rank-3 { color: var(--arcade-pink); }
 .rank-default { color: #94a3b8; }
-.score-gold { color: var(--arcade-green); }
+.score-gold { color: var(--arcade-green); font-weight: bold; }
 
 #dash-logout-btn {
-  margin-top: 28px;
+  margin-top: 24px;
   border-radius: 6px;
 }
 
@@ -471,6 +558,17 @@ button:disabled {
   color: var(--arcade-cyan) !important;
 }
 
+.timer-safe {
+  border-color: var(--arcade-cyan) !important;
+  color: var(--arcade-cyan) !important;
+}
+
+.timer-warn {
+  border-color: var(--arcade-yellow) !important;
+  color: var(--arcade-yellow) !important;
+  box-shadow: 0 0 10px rgba(255, 230, 0, 0.4) !important;
+}
+
 .hud-lives {
   border-color: var(--arcade-pink) !important;
   color: var(--arcade-pink) !important;
@@ -482,19 +580,59 @@ button:disabled {
   color: #94a3b8 !important;
 }
 
-/* Recessed CRT Puzzle Frame */
-#puzzle-img {
-  padding: 16px;
+/* Recessed CRT Monitor Frame for Puzzle Image */
+.puzzle-monitor-frame {
   background: #04070e;
-  border: 2px solid #1e293b;
+  border: 4px solid #1e293b;
+  border-radius: 12px;
+  box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.95), 0 0 20px rgba(0, 240, 255, 0.12);
+  padding: 14px;
+  margin-bottom: 16px;
+  position: relative;
+}
+
+.puzzle-monitor-glass {
+  position: relative;
+  min-height: 250px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #020408;
   border-radius: 8px;
-  max-height: 290px;
+  overflow: hidden;
+  border: 2px solid #0f172a;
+}
+
+.puzzle-loading-state {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(2, 4, 8, 0.92);
+  color: var(--arcade-cyan);
+  font-size: 0.8rem;
+  letter-spacing: 1.5px;
+  z-index: 5;
+}
+
+#puzzle-img {
+  padding: 12px;
+  max-height: 300px;
   max-width: 100%;
   object-fit: contain;
-  margin: 0 auto 16px auto;
+  margin: 0 auto;
   display: block;
-  box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.95), 0 0 15px rgba(0, 240, 255, 0.15);
   image-rendering: auto;
+}
+
+.puzzle-prompt-banner {
+  margin-top: 12px;
+  text-align: center;
+  font-size: 0.62rem;
+  color: var(--arcade-yellow);
+  letter-spacing: 1.5px;
+  font-family: var(--font-arcade);
 }
 
 .badge-user {
@@ -508,12 +646,12 @@ button:disabled {
 
 /* Fixed-Height Feedback Banner */
 #message-box, #auth-message {
-  min-height: 44px;
+  min-height: 46px;
   padding: 10px 16px;
   margin-bottom: 18px;
   border-radius: 6px;
-  background: rgba(15, 23, 42, 0.75);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -528,171 +666,81 @@ button:disabled {
   margin-bottom: 0;
 }
 
-/* ==================================================== */
-/* MS-DOS COMMAND PROMPT EVENT STREAM TERMINAL          */
-/* ==================================================== */
-#event-stream-console {
-  background-color: #030704;
-  border: 4px solid var(--arcade-green);
-  border-radius: 10px;
-  box-shadow: 6px 6px 0px #000, 0 0 20px rgba(57, 255, 20, 0.3);
-  display: flex;
-  flex-direction: column;
-  min-height: 640px;
-  max-height: 760px;
-  height: 100%;
+/* Visually Hidden Inputs for app.js keyboard and script compatibility */
+.visually-hidden-inputs {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
   overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
 }
 
-.terminal-header {
-  background-color: var(--arcade-green);
+/* Colorful Sanwa-Style Tactile 5x2 Arcade Keypad */
+.arcade-keypad {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.keypad-btn {
+  position: relative;
+  font-size: 1.35rem;
+  padding: 16px 8px;
+  font-family: var(--font-arcade);
+  border: 3px solid #fff;
+  border-radius: 10px;
   color: #000;
-  padding: 14px 18px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-}
-
-.terminal-title {
-  font-family: var(--font-arcade);
-  font-size: 0.65rem;
-  font-weight: bold;
-  letter-spacing: 0.5px;
-}
-
-.terminal-controls {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.terminal-tab-btn {
-  background: #000;
-  color: #94a3b8;
-  border: 1px solid #334155;
-  padding: 4px 10px;
-  font-size: 0.58rem;
-  font-family: var(--font-arcade);
-  border-radius: 4px;
-  box-shadow: none;
-  width: auto;
   cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.terminal-tab-btn:hover {
-  color: #fff;
-  border-color: #64748b;
-}
-
-.terminal-tab-btn.active-tab {
-  background: #000;
-  color: var(--arcade-yellow);
-  border-color: var(--arcade-yellow);
-  text-shadow: 0 0 5px var(--arcade-yellow);
-}
-
-.terminal-tab-btn.tab-has-errors {
-  color: var(--arcade-red);
-  border-color: var(--arcade-red);
-  text-shadow: 0 0 6px var(--arcade-red);
-}
-
-.clear-btn {
-  background: #000;
-  color: var(--arcade-green);
-  border: 1px solid #334155;
-  padding: 4px 10px;
-  font-size: 0.58rem;
-  font-family: var(--font-arcade);
-  border-radius: 4px;
-  box-shadow: none;
-  width: auto;
-  cursor: pointer;
-}
-
-.clear-btn:hover {
-  border-color: var(--arcade-green);
-  text-shadow: 0 0 5px var(--arcade-green);
-}
-
-.terminal-body {
-  padding: 20px;
-  font-family: var(--font-dos);
-  font-size: 1.15rem;
-  color: var(--dos-green);
-  line-height: 1.5;
-  overflow-y: auto;
-  flex: 1;
+  box-shadow: 4px 4px 0px #000, inset 0 2px 4px rgba(255, 255, 255, 0.6), inset 0 -3px 6px rgba(0, 0, 0, 0.4);
+  transition: transform 0.08s ease, box-shadow 0.08s ease;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  text-shadow: 0 0 4px rgba(0, 255, 102, 0.6);
+  align-items: center;
+  justify-content: center;
+  user-select: none;
 }
 
-.error-terminal-body {
-  color: var(--arcade-red);
-  text-shadow: 0 0 4px rgba(255, 49, 49, 0.6);
+.keypad-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 6px 6px 0px #000, 0 0 15px currentColor;
 }
 
-.event-entry, .error-entry {
-  padding: 12px 14px;
-  margin-bottom: 4px;
-  border-radius: 4px;
-  line-height: 1.5;
-  animation: scanFade 0.15s ease-in-out;
+.keypad-btn:active {
+  transform: translateY(2px);
+  box-shadow: 1px 1px 0px #000;
 }
 
-.event-entry {
-  background: rgba(0, 255, 102, 0.05);
-  border-left: 4px solid var(--arcade-green);
-}
-
-.error-entry {
-  background: rgba(255, 49, 49, 0.08);
-  border-left: 4px solid var(--arcade-red);
-}
-
-.error-title {
+.keypad-sub {
+  font-size: 0.45rem;
+  opacity: 0.75;
+  margin-top: 2px;
+  font-family: var(--font-dos);
+  color: rgba(0, 0, 0, 0.85);
   font-weight: bold;
-  color: var(--arcade-red);
 }
 
-.error-payload {
-  color: #fca5a5;
-  word-break: break-all;
-  font-size: 1.05rem;
-}
+.btn-color-1 { background: linear-gradient(to bottom, #00f0ff, #0284c7); }
+.btn-color-2 { background: linear-gradient(to bottom, #39ff14, #16a34a); }
+.btn-color-3 { background: linear-gradient(to bottom, #a3e635, #65a30d); }
+.btn-color-4 { background: linear-gradient(to bottom, #fde047, #ca8a04); }
+.btn-color-5 { background: linear-gradient(to bottom, #fb923c, #c2410c); }
+.btn-color-6 { background: linear-gradient(to bottom, #f43f5e, #be123c); }
+.btn-color-7 { background: linear-gradient(to bottom, #ff007f, #b91c1c); }
+.btn-color-8 { background: linear-gradient(to bottom, #c084fc, #7e22ce); }
+.btn-color-9 { background: linear-gradient(to bottom, #818cf8, #4338ca); }
+.btn-color-0 { background: linear-gradient(to bottom, #38bdf8, #0369a1); }
 
-@keyframes scanFade {
-  from { opacity: 0; transform: translateX(-4px); }
-  to { opacity: 1; transform: translateX(0); }
-}
-
-.event-meta {
+.game-bottom-nav {
   display: flex;
-  justify-content: space-between;
-  font-size: 0.95rem;
-  color: var(--arcade-cyan);
-  margin-bottom: 4px;
+  gap: 14px;
 }
 
-.event-name {
-  font-weight: bold;
-  color: var(--arcade-yellow);
-}
-
-.event-name.timer-tick { color: var(--arcade-cyan); }
-.event-name.timer-expired { color: var(--arcade-red); }
-.event-name.auth-success { color: var(--arcade-green); }
-.event-name.auth-register { color: var(--arcade-pink); }
-.event-name.game-start { color: var(--arcade-yellow); }
-
-.event-payload {
-  color: #e2e8f0;
-  word-break: break-all;
-  font-size: 1.05rem;
+.game-bottom-nav button {
+  flex: 1;
 }
 
 /* ==================================================== */
@@ -918,10 +966,11 @@ body.no-scanlines {
   border: 4px solid var(--arcade-yellow);
   border-radius: 10px;
   box-shadow: 0 0 35px rgba(255, 230, 0, 0.6), inset 0 0 20px #000;
-  max-width: 520px;
+  max-width: 540px;
   width: 92%;
   padding: 36px 40px;
   text-align: left;
+  animation: modalDrop 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 .settings-modal-header {

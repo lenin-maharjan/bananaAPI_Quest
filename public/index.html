@@ -7,7 +7,7 @@
   <!-- Responsive layout meta tag -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Retro Arcade Page Title -->
-  <title> BANANA QUEST // 90s ARCADE CABINET EDITION</title>
+  <title>🍌 BANANA QUEST // 90s ARCADE CABINET EDITION</title>
 
   <!-- Import Google Fonts: 'Press Start 2P' (8-bit arcade headers) & 'VT323' (MS-DOS terminal text) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -41,67 +41,110 @@
     <div class="cabinet-title">★ BANANA QUEST ARCADE ★</div>
     <div class="marquee-controls-group">
       <button id="sfx-toggle-btn" class="marquee-mute-btn" type="button" title="Quick toggle 8-bit sound effects">[🔊 SFX: ON]</button>
-      <button id="settings-btn" class="marquee-mute-btn" type="button" title="Open Arcade System Dip Switches & Settings">[⚙️ SETTINGS]</button>
+      <button id="settings-btn" class="marquee-mute-btn" type="button" title="Open Arcade System Dip Switches &amp; Settings">[⚙️ SETTINGS]</button>
     </div>
   </header>
 
-  <!-- Two-Column Responsive Arcade Layout -->
+  <!-- Centered Arcade Cabinet Dashboard Layout -->
   <div class="dashboard-layout">
 
-    <!-- ==================================================== -->
-    <!-- COLUMN 1: INTERACTIVE USER PANELS (THREE SECTIONS)   -->
-    <!-- ==================================================== -->
     <main class="main-content">
 
-      <!-- SECTION 1: INSERT COIN / VIRTUAL IDENTITY LOGIN -->
+      <!-- ==================================================== -->
+      <!-- SECTION 1: INSERT COIN / VIRTUAL IDENTITY LOGIN      -->
+      <!-- ==================================================== -->
       <section id="login-section" class="card">
-        <h2>=== INSERT COIN / LOGIN ===</h2>
-        <p class="subtitle">AUTHENTICATE WITH SQLITE DATABASE &amp; BCRYPT HASHING</p>
+        <div class="card-arcade-header">
+          <span class="arcade-insert-coin-badge blink-text">★ INSERT COIN ★</span>
+          <h2>=== AGENT AUTHENTICATION ===</h2>
+          <p class="subtitle">ENTER CREDENTIALS TO INITIALIZE ARCADE SESSION</p>
+        </div>
 
         <!-- Username Input Field -->
         <div class="form-group">
-          <label for="username">&gt; PLAYER TAG / USERNAME:</label>
-          <input type="text" id="username" placeholder="PLAYER_1" autocomplete="username">
+          <label for="username">&gt; AGENT TAG / USERNAME:</label>
+          <input type="text" id="username" placeholder="e.g. ARCADE_MASTER" autocomplete="username">
         </div>
 
         <!-- Password Input Field -->
         <div class="form-group">
-          <label for="password">&gt; SECRET KEY / PASSWORD:</label>
-          <input type="password" id="password" placeholder="******" autocomplete="current-password">
+          <label for="password">&gt; SECURITY KEY / PASSWORD:</label>
+          <div class="password-input-wrapper">
+            <input type="password" id="password" placeholder="******" autocomplete="current-password">
+            <button type="button" id="toggle-password-btn" class="password-toggle-btn" title="Toggle password visibility">👁️</button>
+          </div>
         </div>
 
         <!-- 8-Bit Action Buttons -->
         <div class="auth-btn-row">
-          <button id="login-btn">[ 1P LOGIN ]</button>
-          <button id="register-btn">[ NEW REGISTER ]</button>
+          <button id="login-btn" class="auth-primary-btn">[ 🕹️ 1P LOGIN ]</button>
+          <button id="register-btn" class="auth-secondary-btn">[ ➕ NEW REGISTER ]</button>
+        </div>
+
+        <!-- Helpful Quick-Start Hint -->
+        <div class="auth-helper-pill">
+          💡 First time playing? Type your desired username &amp; password, then press <strong>[NEW REGISTER]</strong>!
         </div>
 
         <!-- Authentication feedback box -->
         <div id="auth-message"></div>
       </section>
 
-      <!-- SECTION 2: PLAYER HQ & HALL OF FAME LEADERBOARD -->
+      <!-- ==================================================== -->
+      <!-- SECTION 2: PLAYER HQ & HALL OF FAME LEADERBOARD      -->
+      <!-- ==================================================== -->
       <section id="dashboard-section" class="card hidden">
-        <h2>=== PLAYER HQ DASHBOARD ===</h2>
-        <p class="subtitle">AUTHENTICATED AGENT: <span id="dash-user" class="badge-user"></span></p>
+        <div class="card-arcade-header">
+          <h2>=== PLAYER HQ // MISSION CONTROL ===</h2>
+          <div class="player-profile-strip">
+            <div class="profile-item">
+              <span class="profile-label">AUTHENTICATED AGENT:</span>
+              <span id="dash-user" class="badge-user">AGENT_1</span>
+            </div>
+            <div class="profile-item">
+              <span class="profile-label">STATUS:</span>
+              <span class="badge-status-online">● SESSION ACTIVE</span>
+            </div>
+          </div>
+        </div>
 
-        <!-- Start Arcade Game Trigger -->
-        <button id="start-game-btn">🕹️ START ARCADE MODE</button>
+        <!-- Primary Start Arcade Game Trigger -->
+        <button id="start-game-btn" class="big-arcade-start-btn">
+          🕹️ START ARCADE MODE
+        </button>
+
+        <!-- Quick 3-Step Rules Guide -->
+        <div class="how-to-play-grid">
+          <div class="how-to-card">
+            <span class="how-to-icon">🍌</span>
+            <span class="how-to-title">1. SOLVE EQUATION</span>
+            <span class="how-to-desc">Solve the visual banana math puzzle on CRT screen</span>
+          </div>
+          <div class="how-to-card">
+            <span class="how-to-icon">🔢</span>
+            <span class="how-to-title">2. INPUT 0 - 9</span>
+            <span class="how-to-desc">Fire answer with tactile buttons or keyboard number keys</span>
+          </div>
+          <div class="how-to-card">
+            <span class="how-to-icon">🔥</span>
+            <span class="how-to-title">3. BUILD COMBOS</span>
+            <span class="how-to-desc">Chain correct answers fast for 2X &amp; 3X point multipliers</span>
+          </div>
+        </div>
 
         <!-- 90s Hall of Fame Top 5 High Scores Table -->
         <div class="leaderboard-section-wrapper">
           <h3 class="leaderboard-title">
-            🏆 HALL OF FAME // TOP 5 (SQLITE DB)
+            🏆 TOP 5 HALL OF FAME // LEADERBOARD
           </h3>
           <div class="leaderboard-cabinet">
             <div class="leaderboard-header">
               <span>RANK</span>
-              <span>PLAYER</span>
+              <span>AGENT</span>
               <span>HIGH SCORE</span>
             </div>
             <div id="leaderboard-list">
-              <div style="text-align: center; color: #64748b; font-size: 0.65rem; padding: 14px;">LOADING SCORES...
-              </div>
+              <div style="text-align: center; color: #64748b; font-size: 0.65rem; padding: 14px;">LOADING SCORES...</div>
             </div>
           </div>
         </div>
@@ -110,16 +153,18 @@
         <button id="dash-logout-btn" class="danger-btn">⚡ LOG OUT</button>
       </section>
 
-      <!-- SECTION 3: ARCADE GAMEPLAY, KEYPAD & PUZZLE CHALLENGE -->
+      <!-- ==================================================== -->
+      <!-- SECTION 3: ARCADE GAMEPLAY, KEYPAD & PUZZLE CHALLENGE-->
+      <!-- ==================================================== -->
       <section id="game-section" class="card hidden">
         <!-- Top Header Row: Title, Player Badge & API Status Pill -->
         <div class="challenge-header-row">
           <div class="challenge-title-group">
             <h2>=== PUZZLE CHALLENGE ===</h2>
-            <p class="subtitle" style="margin-bottom: 0;">PLAYER: <span id="current-user" class="badge-user"></span></p>
+            <p class="subtitle" style="margin-bottom: 0;">AGENT: <span id="current-user" class="badge-user"></span></p>
           </div>
           <button id="api-status-pill" class="api-status-pill api-live" type="button" title="Click or press 'F' key to toggle simulated API outage">
-            [ 🟢 LIVE API (CLICK TO TEST OFFLINE MODE) ]
+            [ 🟢 ONLINE // API ACTIVE ]
           </button>
         </div>
 
@@ -134,8 +179,18 @@
         <!-- Floating Points Popup Container -->
         <div id="floating-score-container" class="floating-score-container"></div>
 
-        <!-- THEME 2: 3RD-PARTY PUZZLE IMAGE (MARC CONRAD REST API) -->
-        <img id="puzzle-img" src="" alt="Arcade Banana Math Puzzle" class="hidden">
+        <!-- Recessed CRT Monitor Frame for Puzzle Image -->
+        <div class="puzzle-monitor-frame">
+          <div class="puzzle-monitor-glass">
+            <div id="puzzle-loading-indicator" class="puzzle-loading-state hidden">
+              <span class="blink-text">⚡ DECODING PUZZLE MATRIX...</span>
+            </div>
+            <img id="puzzle-img" src="" alt="Arcade Banana Math Puzzle" class="hidden">
+          </div>
+          <div class="puzzle-prompt-banner">
+            <span>&gt; ENTER MISSING DIGIT (0 - 9) TO SOLVE &lt;</span>
+          </div>
+        </div>
 
         <!-- Fixed-Height Feedback Banner (Directly Below Puzzle) -->
         <div id="message-box"></div>
@@ -149,70 +204,30 @@
             <button id="submit-guess-btn">[ FIRE ANSWER ]</button>
           </div>
 
-          <!-- Chunky 0-9 Arcade Push Buttons (Spacious 5x2 Grid) -->
+          <!-- Chunky Colorful 0-9 Arcade Push Buttons (Spacious 5x2 Grid) -->
           <div class="arcade-keypad">
-            <button type="button" class="keypad-btn" data-val="1">1</button>
-            <button type="button" class="keypad-btn" data-val="2">2</button>
-            <button type="button" class="keypad-btn" data-val="3">3</button>
-            <button type="button" class="keypad-btn" data-val="4">4</button>
-            <button type="button" class="keypad-btn" data-val="5">5</button>
-            <button type="button" class="keypad-btn" data-val="6">6</button>
-            <button type="button" class="keypad-btn" data-val="7">7</button>
-            <button type="button" class="keypad-btn" data-val="8">8</button>
-            <button type="button" class="keypad-btn" data-val="9">9</button>
-            <button type="button" class="keypad-btn" data-val="0">0</button>
+            <button type="button" class="keypad-btn btn-color-1" data-val="1">1<span class="keypad-sub">1</span></button>
+            <button type="button" class="keypad-btn btn-color-2" data-val="2">2<span class="keypad-sub">2</span></button>
+            <button type="button" class="keypad-btn btn-color-3" data-val="3">3<span class="keypad-sub">3</span></button>
+            <button type="button" class="keypad-btn btn-color-4" data-val="4">4<span class="keypad-sub">4</span></button>
+            <button type="button" class="keypad-btn btn-color-5" data-val="5">5<span class="keypad-sub">5</span></button>
+            <button type="button" class="keypad-btn btn-color-6" data-val="6">6<span class="keypad-sub">6</span></button>
+            <button type="button" class="keypad-btn btn-color-7" data-val="7">7<span class="keypad-sub">7</span></button>
+            <button type="button" class="keypad-btn btn-color-8" data-val="8">8<span class="keypad-sub">8</span></button>
+            <button type="button" class="keypad-btn btn-color-9" data-val="9">9<span class="keypad-sub">9</span></button>
+            <button type="button" class="keypad-btn btn-color-0" data-val="0">0<span class="keypad-sub">0</span></button>
           </div>
         </div>
 
         <!-- Clean 3-Column Bottom Utility Bar -->
         <div class="game-bottom-nav">
-          <button id="fetch-puzzle-btn">[ NEXT PUZZLE ]</button>
+          <button id="fetch-puzzle-btn">[ ⏭️ NEXT PUZZLE ]</button>
           <button id="back-to-dash-btn" style="background: #334155; color: #fff;">🔙 MAIN MENU</button>
           <button id="logout-btn" class="danger-btn">⚡ LOG OUT</button>
         </div>
       </section>
 
     </main>
-
-    <!-- ==================================================== -->
-    <!-- COLUMN 2: MS-DOS LIVE PUB/SUB EVENT STREAM CONSOLE   -->
-    <!-- THEME 2: EVENT-DRIVEN ARCHITECTURE VISUALIZATION     -->
-    <!-- ==================================================== -->
-    <aside id="event-stream-console">
-
-      <!-- MS-DOS Title Bar with [BUS] & [ERRORS] Tabs -->
-      <div class="terminal-header">
-        <span id="terminal-title" class="terminal-title">C:\BANANA_QUEST\EVENT_BUS.EXE</span>
-        <div class="terminal-controls">
-          <button id="tab-bus-btn" class="terminal-tab-btn active-tab" type="button" title="View Event Bus Stream">[BUS]</button>
-          <button id="tab-errors-btn" class="terminal-tab-btn" type="button" title="View Error Dashboard Console">[ERRORS]</button>
-          <button id="clear-stream-btn" class="clear-btn" type="button" title="Clear Active Log Buffer">[CLS]</button>
-        </div>
-      </div>
-
-      <!-- Real-time Event Log Body (Event Bus Tab) -->
-      <div id="event-log-container" class="terminal-body">
-        <div class="event-entry">
-          <div class="event-meta">
-            <span>MS-DOS 6.22 EVENT SUBSYSTEM</span>
-            <span>READY</span>
-          </div>
-          <div class="event-payload">&gt; Listening on window CustomEvent bus...</div>
-        </div>
-      </div>
-
-      <!-- Dedicated Error Dashboard Console Body (Error Tab) -->
-      <div id="error-log-container" class="terminal-body error-terminal-body hidden">
-        <div class="error-entry">
-          <div class="event-meta">
-            <span style="color: var(--arcade-red); font-weight: bold;">C:\BANANA_QUEST\ERROR_LOG.DAT</span>
-            <span>READY</span>
-          </div>
-          <div class="event-payload" style="color: #ff9999;">&gt; Intercepting runtime faults, timeouts, wrong answers &amp; API network drops...</div>
-        </div>
-      </div>
-
-    </aside>
 
   </div>
 
@@ -305,7 +320,7 @@
     </div>
   </div>
 
-  <!-- Modular ES6 frontend architecture connecting decoupled domain modules (audio, terminal, api, ui) -->
+  <!-- Modular ES6 frontend architecture connecting decoupled domain modules (audio, api, ui, settings, gameState) -->
   <script type="module" src="/js/app.js"></script>
 </body>
 
