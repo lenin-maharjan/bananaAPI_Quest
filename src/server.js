@@ -62,8 +62,13 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Start the HTTP server on the configured port
-app.listen(PORT, () => {
-  // Output confirmation to console
-  console.log(`Server is running at http://localhost:${PORT}`);
-});
+// Start the HTTP server on the configured port when executed directly
+if (require.main === module) {
+  app.listen(PORT, () => {
+    // Output confirmation to console
+    console.log(`Server is running at http://localhost:${PORT}`);
+  });
+}
+
+// Export Express app instance for automated testing
+module.exports = app;

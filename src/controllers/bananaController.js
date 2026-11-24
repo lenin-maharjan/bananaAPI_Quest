@@ -24,6 +24,7 @@ exports.getPuzzle = async (req, res) => {
 
     // Return puzzle question asset, provenance source, and queue hints
     return res.json({
+      success: true,
       question: puzzle.question,
       source: puzzle.source,
       prefetched: puzzle.prefetched,
