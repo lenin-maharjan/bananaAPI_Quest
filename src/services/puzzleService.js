@@ -1,6 +1,17 @@
 // ====================================================
-// SERVICE: PUZZLE BUFFER, INTEROPERABILITY & FAILOVER
-// THEME 2: INTEROPERABILITY (EXTERNAL API RESILIENCE)
+// File: src/services/puzzleService.js
+// Author: Lenin Maharjan (Student ID: 2425736)
+// Module: CIS046-3 Software for Enterprise AY 26/27
+//
+// Authorship & AI Assistance Disclosure:
+// - Pre-fetch queue producer-consumer pattern and failover strategy designed by the Author.
+// - Implementation drafted and refactored with generative AI assistance
+//   (Gemini 3.8 / Google Antigravity IDE).
+// - All network timeouts, queue synchronization, and fallback logic verified by the Author.
+//
+// External References & Documentation:
+// - Marc Conrad's Banana API: https://marcconrad.com/uob/banana/doc.php
+// - AbortSignal.timeout (Fetch API): https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal/timeout_static
 // ====================================================
 
 const { FALLBACK_PUZZLE_BANK } = require('../config/fallbackPuzzles');

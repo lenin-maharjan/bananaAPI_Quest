@@ -1,6 +1,16 @@
 // ====================================================
-// ROUTES: AUTHENTICATION (VIRTUAL IDENTITY)
-// THEME 4: VIRTUAL IDENTITY ROUTING
+// File: src/routes/authRoutes.js
+// Author: Lenin Maharjan (Student ID: 2425736)
+// Module: CIS046-3 Software for Enterprise AY 26/27
+//
+// Authorship & AI Assistance Disclosure:
+// - REST endpoint routing and URL naming conventions designed by the Author.
+// - Implementation drafted and refactored with generative AI assistance
+//   (Gemini 3.8 / Google Antigravity IDE).
+// - All route bindings verified by the Author.
+//
+// External References & Documentation:
+// - Express Router: https://expressjs.com/en/guide/routing.html
 // ====================================================
 
 // Import Express framework to access the Router module

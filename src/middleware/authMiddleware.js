@@ -1,6 +1,16 @@
 // ====================================================
-// SECURITY MIDDLEWARE: AUTHENTICATION ENFORCEMENT
-// THEME 4: VIRTUAL IDENTITY & ACCESS CONTROL
+// File: src/middleware/authMiddleware.js
+// Author: Lenin Maharjan (Student ID: 2425736)
+// Module: CIS046-3 Software for Enterprise AY 26/27
+//
+// Authorship & AI Assistance Disclosure:
+// - Authentication interceptor and security boundary designed by the Author.
+// - Implementation drafted and refactored with generative AI assistance
+//   (Gemini 3.8 / Google Antigravity IDE).
+// - Security gate logic verified by the Author.
+//
+// External References & Documentation:
+// - Express Middleware: https://expressjs.com/en/guide/using-middleware.html
 // ====================================================
 
 // Middleware function to intercept requests and verify active Virtual Identity session

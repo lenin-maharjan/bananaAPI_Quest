@@ -1,6 +1,16 @@
 // ====================================================
-// CONFIGURATION: OFFLINE FALLBACK PUZZLE BANK
-// THEME 2: INTEROPERABILITY (EXTERNAL API FAULT TOLERANCE)
+// File: src/config/fallbackPuzzles.js
+// Author: Lenin Maharjan (Student ID: 2425736)
+// Module: CIS046-3 Software for Enterprise AY 26/27
+//
+// Authorship & AI Assistance Disclosure:
+// - Curated fallback cache bank and offline high availability strategy designed by the Author.
+// - Implementation drafted and refactored with generative AI assistance
+//   (Gemini 3.8 / Google Antigravity IDE).
+// - All fallback image URLs and verified solutions reviewed by the Author.
+//
+// External References & Documentation:
+// - Marc Conrad's Banana API Dataset: https://marcconrad.com/uob/banana/doc.php
 // ====================================================
 
 // Diverse offline fallback cache bank (12 unique puzzles covering solutions 0 through 9)

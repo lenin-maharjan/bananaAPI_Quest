@@ -1,6 +1,16 @@
 // ====================================================
-// MODULE: UI PRESENTATION & DOM MANIPULATION
-// THEME 3: EVENT-DRIVEN PROGRAMMING & GAME JUICE
+// File: public/js/ui.js
+// Author: Lenin Maharjan (Student ID: 2425736)
+// Module: CIS046-3 Software for Enterprise AY 26/27
+//
+// Authorship & AI Assistance Disclosure:
+// - UI state transitions, DOM manipulation methods, and screen effects designed by the Author.
+// - Implementation drafted and refactored with generative AI assistance
+//   (Gemini 3.8 / Google Antigravity IDE).
+// - All DOM bindings and view switching logic verified by the Author.
+//
+// External References & Documentation:
+// - DOM Manipulation: https://developer.mozilla.org/en-US/docs/Web/API/Document_Object_Model
 // ====================================================
 
 // Cache DOM element references for all 3 view sections

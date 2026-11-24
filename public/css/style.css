@@ -1,7 +1,18 @@
-/* ==================================================== */
-/* 90s RETRO ARCADE CABINET & CRT DESIGN SYSTEM         */
-/* THEME 1: MODULAR COMPONENT STYLING & MODERN CSS TOKENS*/
-/* ==================================================== */
+/* ====================================================
+  File: public/css/style.css
+  Author: Lenin Maharjan (Student ID: 2425736)
+  Module: CIS046-3 Software for Enterprise AY 26/27
+
+  Authorship & AI Assistance Disclosure:
+  - 90s CRT design system, CSS custom properties, and keyframe animations designed by the Author.
+  - Implementation drafted and polished with generative AI assistance
+    (Gemini 3.8 / Google Antigravity IDE).
+  - All styling, responsive rules, and CRT visual filters verified by the Author.
+
+  External References & Documentation:
+  - CRT Scanline Techniques & CSS Custom Properties: https://developer.mozilla.org/en-US/docs/Web/CSS/--*
+  - Google Fonts: https://fonts.google.com/
+==================================================== */
 :root {
   /* CRT Monitor & Arcade Cabinet Color Tokens */
   --crt-bg: #030708;

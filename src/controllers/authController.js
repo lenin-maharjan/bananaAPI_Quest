@@ -1,6 +1,17 @@
 // ====================================================
-// CONTROLLER: AUTHENTICATION & VIRTUAL IDENTITY
-// THEME 4: VIRTUAL IDENTITY (CRYPTOGRAPHY & DATABASE)
+// File: src/controllers/authController.js
+// Author: Lenin Maharjan (Student ID: 2425736)
+// Module: CIS046-3 Software for Enterprise AY 26/27
+//
+// Authorship & AI Assistance Disclosure:
+// - Authentication workflows, session binding, and credential security designed by the Author.
+// - Implementation drafted and refactored with generative AI assistance
+//   (Gemini 3.8 / Google Antigravity IDE).
+// - All cryptographic flows and security policies verified by the Author.
+//
+// External References & Documentation:
+// - bcryptjs (Password Hashing): https://github.com/dcodeIO/bcrypt.js
+// - express-session Virtual Identity: https://expressjs.com/en/resources/middleware/session.html
 // ====================================================
 
 // Import bcryptjs library for secure one-way password hashing
